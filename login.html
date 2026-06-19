@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RoadSafe India — Login</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet" />
+  <!-- Theme engine - load first to prevent flash -->
+  <script src="theme.js?v=2"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root[data-theme="dark"] {
+      --red: #ef4444; --orange: #f97316;
+      --bg: #040810; --card: rgba(11,17,32,0.95); --border: rgba(255,255,255,0.09);
+      --txt: #f1f5f9; --sub: #94a3b8; --input-bg: rgba(0,0,0,0.4);
+      --input-border: rgba(255,255,255,0.1); --input-color: #f1f5f9;
+      --btn-ghost-bg: rgba(255,255,255,0.06); --btn-ghost-border: rgba(255,255,255,0.18);
+      --btn-ghost-txt: #94a3b8;
+    }
+    :root[data-theme="light"] {
+      --red: #dc2626; --orange: #ea580c;
+      --bg: #f1f5f9; --card: rgba(255,255,255,0.97); --border: rgba(0,0,0,0.1);
+      --txt: #0f172a; --sub: #475569; --input-bg: #f8fafc;
+      --input-border: rgba(0,0,0,0.14); --input-color: #0f172a;
+      --btn-ghost-bg: rgba(0,0,0,0.04); --btn-ghost-border: rgba(0,0,0,0.18);
+      --btn-ghost-txt: #475569;
+    }
+    :root {
+      --red: #ef4444; --orange: #f97316;
+      --bg: #040810; --card: rgba(11,17,32,0.95); --border: rgba(255,255,255,0.09);
+      --txt: #f1f5f9; --sub: #94a3b8; --input-bg: rgba(0,0,0,0.4);
+      --input-border: rgba(255,255,255,0.1); --input-color: #f1f5f9;
+      --btn-ghost-bg: rgba(255,255,255,0.06); --btn-ghost-border: rgba(255,255,255,0.18);
+      --btn-ghost-txt: #94a3b8;
+    }
+    /* Theme toggle button */
+    .theme-toggle-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 999px;
+      border: 1px solid var(--btn-ghost-border, rgba(255,255,255,0.18));
+      background: var(--btn-ghost-bg, rgba(255,255,255,0.06));
+      color: var(--btn-ghost-txt, #94a3b8);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: background .2s, color .2s;
+    }
+    .theme-toggle-btn:hover { background: rgba(255,255,255,0.12); color: #f1f5f9; }
+    [data-theme="light"] .theme-toggle-btn:hover { background: rgba(0,0,0,0.10); color: #0f172a; }
+    [data-theme="dark"]  .icon-moon { display: none; }
+    [data-theme="dark"]  .icon-sun  { display: block; }
+    [data-theme="light"] .icon-sun  { display: none; }
+    [data-theme="light"] .icon-moon { display: block; }
+    :root:not([data-theme]) .icon-moon { display: none; }
+    :root:not([data-theme]) .icon-sun  { display: block; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+    }
+
+    .g1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: rgba(239, 68, 68, .12);
+      border-radius: 50%;
+      filter: blur(100px);
+      top: -150px;
+      right: -100px;
+    }
+
+    .g2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: rgba(249, 115, 22, .08);
+      border-radius: 50%;
+      filter: blur(100px);
+      bottom: -150px;
+      left: -100px;
+    }
+
+    .g3 {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(168, 85, 247, .06);
+      border-radius: 50%;
+      filter: blur(80px);
+      top: 40%;
+      left: 30%;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 460px;
+      padding: 1.5rem;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo-icon {
+      font-size: 2.5rem;
+      margin-bottom: .5rem;
+      display: block;
+    }
+
+    .logo-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .logo-sub {
+      font-size: .78rem;
+      color: rgba(255, 255, 255, .45);
+      margin-top: 2px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+      transition: background .25s, border-color .25s;
+    }
+
+    .tabs {
+      display: flex;
+      background: rgba(0, 0, 0, .3);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 1.75rem;
+      gap: 4px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 9px;
+      border-radius: 7px;
+      font-size: .87rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: rgba(255, 255, 255, .45);
+      transition: all .25s;
+      border: none;
+      background: none;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      box-shadow: 0 3px 14px rgba(239, 68, 68, .35);
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .fg {
+      margin-bottom: 1.1rem;
+    }
+
+    .fl {
+      display: block;
+      font-size: .79rem;
+      font-weight: 600;
+      color: var(--sub);
+      margin-bottom: .4rem;
+    }
+
+    .fi {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 9px;
+      padding: 11px 14px;
+      color: var(--input-color);
+      font-family: 'Inter', sans-serif;
+      font-size: .9rem;
+      transition: border-color .2s, background .2s;
+      outline: none;
+    }
+
+    .fi:focus {
+      border-color: rgba(239, 68, 68, .5);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, .1);
+    }
+
+    .fi::placeholder {
+      color: var(--sub, rgba(255,255,255,.3));
+    }
+
+    .btn-auth {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #ef4444, #9333ea);
+      color: #fff;
+      border: none;
+      border-radius: 99px;
+      font-family: 'Inter', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .25s;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, .35);
+      margin-top: .25rem;
+    }
+
+    .btn-auth:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(239, 68, 68, .5);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1.25rem 0;
+      color: rgba(255, 255, 255, .25);
+      font-size: .78rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .demo-creds {
+      background: rgba(239, 68, 68, .07);
+      border: 1px solid rgba(239, 68, 68, .2);
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: .78rem;
+    }
+
+    .demo-creds strong {
+      color: rgba(255, 255, 255, .7);
+      display: block;
+      margin-bottom: .5rem;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .cred-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: rgba(255, 255, 255, .5);
+    }
+
+    .cred-row span:last-child {
+      font-family: monospace;
+      color: rgba(239, 68, 68, .8);
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, .12);
+      border: 1px solid rgba(239, 68, 68, .3);
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      font-size: .8rem;
+      color: #fca5a5;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .success-msg {
+      background: rgba(34, 197, 94, .1);
+      border: 1px solid rgba(34, 197, 94, .3);
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      font-size: .8rem;
+      color: #86efac;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: .73rem;
+      color: rgba(255, 255, 255, .3);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .wrapper {
+      animation: fadeIn .5s ease
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Theme toggle (floating, top-right) -->
+  <div style="position:fixed;top:1rem;right:1rem;z-index:9999">
+    <button
+        id="themeToggleBtn"
+        onclick="toggleTheme()"
+        title="Toggle Dark/Light mode"
+        style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:99px;border:1px solid rgba(150,150,150,0.4);background:rgba(128,128,128,0.15);color:inherit;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;backdrop-filter:blur(12px);transition:background .2s;">
+      <span id="themeIcon" style="font-size:.95rem;line-height:1">&#9728;&#65039;</span>
+      <span id="themeLabel">Light</span>
+    </button>
+  </div>
+  <div class="bg">
+    <div class="grid"></div>
+    <div class="g1"></div>
+    <div class="g2"></div>
+    <div class="g3"></div>
+  </div>
+  <div class="wrapper">
+    <div class="logo">
+      <span class="logo-icon">■</span>
+      <div class="logo-name">RoadSafe India</div>
+      <div class="logo-sub">AI-Powered Accident Hotspot Predictor</div>
+    </div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="form-section active" id="loginForm">
+        <div class="error-msg" id="loginErr"></div>
+        <div class="fg">
+          <label class="fl">Email Address</label>
+          <input type="email" class="fi" id="loginEmail" placeholder="you@example.com" />
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input type="password" class="fi" id="loginPass" placeholder="••••••••" />
+        </div>
+        <button class="btn-auth" id="loginBtn" onclick="doLogin()">Sign In to RoadSafe</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="form-section" id="registerForm">
+        <div class="error-msg" id="regErr"></div>
+        <div class="success-msg" id="regOk"></div>
+        <div class="fg">
+          <label class="fl">Full Name</label>
+          <input type="text" class="fi" id="regName" placeholder="Arjun Kumar" />
+        </div>
+        <div class="fg">
+          <label class="fl">Email Address</label>
+          <input type="email" class="fi" id="regEmail" placeholder="arjun@example.com" />
+        </div>
+        <div class="fg">
+          <label class="fl">Password (min 6 chars)</label>
+          <input type="password" class="fi" id="regPass" placeholder="Create a strong password" />
+        </div>
+        <div class="fg">
+          <label class="fl">Confirm Password</label>
+          <input type="password" class="fi" id="regPass2" placeholder="Repeat password" />
+        </div>
+        <button class="btn-auth" id="regBtn" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+    <div class="footer-note">© 2026 RoadSafe India · MFAI Project · VIT · Data: MoRTH India</div>
+  </div>
+  <script src="auth.js?v=2"></script>
+  <script>
+    // Redirect if already logged in
+    const s = RS.getSession();
+    if (s) window.location.href = s.role === 'admin' ? 'admin.html' : 'index.html';
+
+    function switchTab(t) {
+      document.querySelectorAll('.tab').forEach((b, i) => b.classList.toggle('active', i === (t === 'login' ? 0 : 1)));
+      document.querySelectorAll('.form-section').forEach((f, i) => f.classList.toggle('active', i === (t === 'login' ? 0 : 1)));
+    }
+
+    function setLoading(btnId, loading, text) {
+      const b = document.getElementById(btnId);
+      b.disabled = loading;
+      b.innerHTML = loading ? `<span class="spinner"></span> ${text}...` : text;
+    }
+
+    function showErr(id, msg) {
+      const e = document.getElementById(id); e.textContent = msg; e.style.display = 'block';
+      setTimeout(() => e.style.display = 'none', 4000);
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      if (!email || !pass) { showErr('loginErr', 'Please fill in all fields.'); return; }
+      setLoading('loginBtn', true, 'Signing In');
+      await new Promise(r => setTimeout(r, 600));
+      const res = RS.login(email, pass);
+      setLoading('loginBtn', false, 'Sign In to RoadSafe');
+      if (!res.ok) { showErr('loginErr', res.msg); return; }
+      window.location.href = res.user.role === 'admin' ? 'admin.html' : 'index.html';
+    }
+
+    async function doRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const p1 = document.getElementById('regPass').value;
+      const p2 = document.getElementById('regPass2').value;
+      if (!name || !email || !p1 || !p2) { showErr('regErr', 'Please fill in all fields.'); return; }
+      if (p1 !== p2) { showErr('regErr', 'Passwords do not match.'); return; }
+      setLoading('regBtn', true, 'Creating Account');
+      await new Promise(r => setTimeout(r, 700));
+      const res = RS.register(name, email, p1);
+      setLoading('regBtn', false, 'Create Account');
+      if (!res.ok) { showErr('regErr', res.msg); return; }
+      window.location.href = 'index.html';
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const active = document.querySelector('.form-section.active');
+        if (active.id === 'loginForm') doLogin();
+        else doRegister();
+      }
+    });
+  </script>
+</body>
+
+</html>

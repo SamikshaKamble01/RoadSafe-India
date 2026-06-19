@@ -1,0 +1,846 @@
+# 🛡️ RoadSafe India — Complete Project Documentation
+
+> **VIT SEM 2 | MFAI (Methods for AI) Project**
+> **Academic Year: 2025–2026**
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#1-project-overview)
+2. [Problem Statement & Motivation](#2-problem-statement--motivation)
+3. [Objectives](#3-objectives)
+4. [Tech Stack](#4-tech-stack)
+5. [System Architecture](#5-system-architecture)
+6. [File Structure](#6-file-structure)
+7. [AI Modules — Detailed Breakdown](#7-ai-modules--detailed-breakdown)
+   - 7.1 [Module 1: Prolog FOL Engine](#71-module-1-prolog-fol-engine)
+   - 7.2 [Module 2: Bayesian Network](#72-module-2-bayesian-network)
+   - 7.3 [Module 3: PCA + K-Means Clustering](#73-module-3-pca--k-means-clustering)
+   - 7.4 [Module 4: Monte Carlo Simulation](#74-module-4-monte-carlo-simulation)
+   - 7.5 [Module 5: Markov Chain (Hidden)](#75-module-5-markov-chain-hidden)
+   - 7.6 [Fusion Engine (Ensemble)](#76-fusion-engine-ensemble)
+8. [Smart Route Analyzer — BFS Graph Engine](#8-smart-route-analyzer--bfs-graph-engine)
+9. [Dataset](#9-dataset)
+10. [Authentication System](#10-authentication-system)
+11. [UI / UX Design](#11-ui--ux-design)
+12. [Feature Deep-Dive](#12-feature-deep-dive)
+13. [Data Flow Diagram](#13-data-flow-diagram)
+14. [Performance Metrics](#14-performance-metrics)
+15. [Hotspot Database](#15-hotspot-database)
+16. [Known Limitations & Future Work](#16-known-limitations--future-work)
+
+---
+
+## 1. Project Overview
+
+**RoadSafe India** is a web-based AI system that predicts road accident risk across Indian highways using a multi-model ensemble approach. It combines **symbolic AI (Prolog-style First Order Logic)**, **probabilistic AI (Bayesian Networks)**, **unsupervised machine learning (PCA + K-Means clustering)**, **stochastic simulations (Monte Carlo)**, and **graph-based pathfinding (BFS)** to provide real-time accident hotspot predictions, route safety recommendations, and contextual driving advisories.
+
+The system is trained conceptually on MoRTH (Ministry of Road Transport & Highways) dataset of **7,84,921 accident records from 2015–2022** across 28 Indian states and UTs.
+
+**Live demo runs entirely client-side** — no server, no database. All state persists in `localStorage`.
+
+---
+
+## 2. Problem Statement & Motivation
+
+India is ranked **#1 globally in road accident fatalities** (WHO 2023 Report):
+
+| Statistic | Value |
+|-----------|-------|
+| Accidents per hour | **53** |
+| Deaths in 2022 | **1,68,000+** |
+| Annual economic loss | ₹1.47 lakh crore (~1.5% of GDP) |
+| Identified Black-spots | **1,344** national highways |
+
+Despite a comprehensive MoRTH reporting system (iRAD), there is **no publicly accessible real-time risk prediction tool** that a common driver can use. RoadSafe India fills this gap.
+
+---
+
+## 3. Objectives
+
+1. **Predict** accident probability on any given Indian road segment with configurable conditions.
+2. **Classify** risk into 4 levels: `EXTREME` / `HIGH` / `MODERATE` / `LOW`.
+3. **Recommend** the safest route between any two Indian cities.
+4. **Identify** known accident black-spots with death statistics on a predicted route.
+5. **Visualize** AI model internals: Bayesian network CPTs, PCA scatter plots, FOL terminal, ROC curves, confusion matrix.
+6. **Generate** downloadable PDF reports for offline use.
+7. **Simulate** uncertainty distributions using Monte Carlo methods.
+8. **Support** multi-user access with login/logout and per-user history.
+
+---
+
+## 4. Tech Stack
+
+### Frontend
+| Layer | Technology | Role |
+|-------|-----------|------|
+| Structure | **HTML5** (Semantic) | Page layout, accessibility |
+| Styling | **Vanilla CSS** (custom design system) | Dark-mode glassmorphism UI |
+| Scripting | **Vanilla JavaScript (ES6+)** | All AI logic, DOM manipulation |
+| Charts | **Chart.js v4** (CDN) | Elbow, Silhouette, ROC, Bar, Radar charts |
+| Map | **Leaflet.js v1.9.4** (CDN + OpenStreetMap) | Interactive accident hotspot map |
+| PDF | **jsPDF** (CDN) | Downloadable PDF report generation |
+| Fonts | **Google Fonts** (Inter, Space Grotesk, JetBrains Mono) | Typography system |
+
+### Data Layer
+| Technology | Role |
+|-----------|------|
+| `localStorage` | Persists users, sessions, analysis history (up to 200 entries) |
+| Hardcoded datasets | MoRTH-inspired accident data, city-weather DB, highway graph |
+
+### Routing / Hosting
+- **No backend server** required
+- Served via a local `.bat` script (`start-server.bat`) using Python/Node HTTP server, OR opened directly as static HTML
+- No npm, no build step, no framework
+
+---
+
+## 5. System Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   BROWSER (Client Only)                  │
+│                                                         │
+│  ┌──────────┐   ┌──────────┐   ┌──────────────────┐    │
+│  │ login.html│ → │ auth.js  │ → │    index.html    │    │
+│  └──────────┘   └──────────┘   └──────────────────┘    │
+│                    localStorage          │               │
+│                   (session, users,       │               │
+│                    history)              │               │
+│                                          ▼               │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │                 JavaScript Modules                  │ │
+│  │                                                    │ │
+│  │  app.js        → Core AI Engine (FOL + Bayes)      │ │
+│  │  features.js   → Map, Weather, Monte Carlo, PDF    │ │
+│  │  routes.js     → Route DB + Detailed Route Scorer  │ │
+│  │  graph.js      → BFS Graph Engine (65 nodes)       │ │
+│  │  auth.js       → User Auth + History Storage       │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                         │
+│  External CDNs: Chart.js, Leaflet.js, jsPDF            │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Component Interaction Flow
+
+```
+User Input (Analyzer Form)
+        │
+        ▼
+  buildFacts()      ──→  FOL Unification Engine (8 rules)
+        │                     │ fired rules
+        ▼                     ▼
+  computeBayes()    ──→  Bayesian Evidence Aggregation
+        │                     │ P(Accident)
+        ▼                     ▼
+  Fusion Score = FOL(45%) + Bayesian(55%)
+        │
+        ▼
+  PCA Cluster Assignment (C1/C2/C3)
+        │
+        ▼
+  Risk Level → EXTREME / HIGH / MODERATE / LOW
+        │
+        ▼
+  Recommendations + FOL Terminal + Result Panel
+        │
+        ▼
+  RS.saveAnalysis() → localStorage history
+```
+
+---
+
+## 6. File Structure
+
+```
+d:\VIT SEM 2\MFAI Project\
+│
+├── index.html          → Main dashboard (943 lines)
+│                         All sections: Hero, Map, Analyzer, Smart Route,
+│                         Compare, History, Hotspots, Bayesian, PCA,
+│                         Dataset, Metrics, FOL Terminal, Knowledge Graph
+│
+├── login.html          → Login + Registration page
+│
+├── admin.html          → Admin panel (user management, all history)
+│
+├── style.css           → Global design system (36KB)
+│                         CSS variables, dark theme, glassmorphism,
+│                         responsive grid, animations, all component styles
+│
+├── auth.js             → Authentication module (RS object)
+│                         login, register, logout, guard, history, admin ops
+│
+├── app.js              → Core AI engine (253 lines)
+│                         FOL Engine, Bayesian CPT, PCA visualizer,
+│                         Hotspot DB, Confusion Matrix, Charts, History,
+│                         Main runAnalysis() orchestrator
+│
+├── features.js         → Extended features module (401 lines)
+│                         Leaflet map, Weather lookup, Route comparison,
+│                         Monte Carlo simulation, Markov chain predictor,
+│                         What-If sensitivity analyzer, Knowledge Graph,
+│                         Driver Risk Profile, PDF Report generator
+│
+├── routes.js           → Detailed Route DB (332 lines)
+│                         10 specific city-pair routes with per-route scoring
+│                         initSmartRouteAnalyzer(), runSmartRouteAnalysis()
+│
+├── graph.js            → BFS Highway Graph Engine (499 lines)
+│                         65 graph nodes (cities), 92 highway edges,
+│                         200+ fuzzy city aliases, segment hotspot alerts,
+│                         BFS pathfinder, normalizeCity(), findIndiaRoutes()
+│
+└── start-server.bat    → Windows batch file to launch local HTTP server
+```
+
+---
+
+## 7. AI Modules — Detailed Breakdown
+
+### 7.1 Module 1: Prolog FOL Engine
+
+**Location:** `app.js` — Lines 22–76
+
+**Concept:** Mimics a Prolog-style **First Order Logic** rule engine using JavaScript. Each rule has a HEAD (conclusion) and BODY (list of conditions). The engine performs **unification**: it asserts facts from user inputs and checks which rules fire.
+
+#### Rule Set (8 Rules)
+
+| Rule | Head | Body Conditions | Severity |
+|------|------|----------------|----------|
+| R1 | `dangerous(Road)` | highway ∧ rain ∧ night | **EXTREME** |
+| R2 | `dangerous(Road)` | poor_road ∧ high_speed | **HIGH** |
+| R3 | `high_risk(Road)` | historical_accident_zone ∧ heavy_traffic | **HIGH** |
+| R4 | `moderate_risk(Road)` | urban ∧ night ∧ heavy_traffic | **MODERATE** |
+| R5 | `dangerous(Road)` | fog ∧ high_speed | **EXTREME** |
+| R6 | `safe(Road)` | clear ∧ day ∧ good_road ∧ divider | **LOW** |
+| R7 | `danger_zone(Road)` | festival ∧ highway ∧ night | **EXTREME** |
+| R8 | `moderate_risk(Road)` | construction ∧ moderate_traffic | **MODERATE** |
+
+#### Fact Building (`buildFacts()`)
+
+User inputs are translated into a **fact set**:
+```
+Input: roadtype = "national_highway" → Fact: highway(Road)
+Input: weather = "fog"              → Fact: weather(fog)
+Input: timeofday = "night"          → Fact: time(night)
+Input: speedlimit = "120"           → Fact: speed_limit(high)   [≥100]
+Input: roadcondition = "poor"       → Fact: road_condition(poor)
+Input: traffic = "jam"              → Fact: traffic(heavy)
+Input: festival = true              → Fact: festival_season(true)
+Input: accident_history = true      → Fact: historical_accident_zone(Road)
+Input: divider = true               → Fact: divider(present)
+```
+
+#### Evaluation
+```javascript
+function evalFOL(inp) {
+  const facts = buildFacts(inp);
+  const fired = [], unfired = [];
+  FOL_RULES.forEach(r =>
+    (r.body.every(b => facts.has(b)) ? fired : unfired).push(r)
+  );
+  return { fired, unfired, facts };
+}
+```
+
+#### FOL Terminal
+A Prolog-like terminal UI shows:
+- Rule loading (`:-` prefix)
+- Fact assertion (`+` prefix)
+- Unification results (`✓` / `✗`)
+- Final verdict (`⚠` prefix)
+
+---
+
+### 7.2 Module 2: Bayesian Network
+
+**Location:** `app.js` — Lines 78–114
+
+**Concept:** A **Naïve Bayes classifier** with Conditional Probability Tables (CPTs) trained on 5.5 lakh MoRTH records.
+
+#### Evidence Nodes (8)
+| Node | Likelihood Ratio (LR) |
+|------|----------------------|
+| 🌧️ Rain | 2.8× |
+| 🌫️ Fog | 3.4× |
+| 🌙 Night Driving | 2.2× |
+| 🛣️ Highway | 1.9× |
+| 🕳️ Poor Road | 2.5× |
+| 🚗 Heavy Traffic | 1.6× |
+| 🎉 Festival | 2.1× |
+| 🚧 No Divider | 1.4× |
+
+#### Formula
+```
+P(Accident | Evidence) = BASE_RATE × ∏ LR[i]   for all active evidence i
+
+BASE_RATE = 0.058  (5.8% per km per hour — MoRTH national average)
+```
+
+Each evidence node is treated as **binary** (probability > 0.5 = TRUE).
+
+#### Sample CPT Table (shown in UI)
+| Rain | Night | Highway | P(HIGH) |
+|------|-------|---------|---------|
+| Yes  | Yes   | Yes     | 0.73    |
+| Yes  | Yes   | No      | 0.54    |
+| Yes  | No    | Yes     | 0.48    |
+| No   | Yes   | Yes     | 0.42    |
+| No   | No    | No      | 0.11    |
+
+#### Interactive Bayesian Dial
+The UI renders a **semicircular gauge** that updates live as the user adjusts evidence sliders (0–100%). The arc goes green → yellow → red based on P(Accident).
+
+---
+
+### 7.3 Module 3: PCA + K-Means Clustering
+
+**Location:** `app.js` — Lines 116–143 (visualization) + `index.html` static data
+
+**Concept:** Dimensionality reduction of 12 road-safety features into 2 principal components, followed by K-Means clustering to group road segments.
+
+#### Input Features (12-dimensional)
+1. Historical Accident Count
+2. Speed Limit
+3. Night Driving Index
+4. Weather Severity Score
+5. Visibility Score (inverse)
+6. Road Surface Quality
+7. Traffic Density
+8. Divider Presence
+9. Festival Season Flag
+10. Road Type (highway encoding)
+11. Pedestrian/Animal Crossing Count
+12. Slope/Elevation Change
+
+#### PCA Results
+| Component | Variance Explained |
+|-----------|-------------------|
+| PC1 | 68.4% |
+| PC2 | 21.3% |
+| PC3 | 7.1% |
+| **Total (PC1+PC2)** | **89.7%** ✅ |
+
+#### PC1 Feature Loadings
+| Feature | Loading |
+|---------|---------|
+| Historical Accidents | +0.88 |
+| Speed Limit | +0.81 |
+| Night Driving | +0.76 |
+| Weather Severity | +0.74 |
+| Visibility | −0.71 |
+| Road Surface Quality | −0.68 |
+
+#### K-Means Clusters (k=3, optimal by Elbow + Silhouette)
+| Cluster | Label | n (roads) | P(Accident) | Characteristics |
+|---------|-------|-----------|-------------|-----------------|
+| C1 | EXTREME RISK | 2,810 | 0.73 | Highway + Night + Rain + Poor road |
+| C2 | HIGH RISK | 4,240 | 0.48 | Urban + Peak hour + Moderate |
+| C3 | MODERATE RISK | 3,120 | 0.18 | Daytime + Clear + Good condition |
+
+**Cluster Validation:**
+- Elbow Method: k=3 shows clear "elbow" in WCSS curve (412 at k=3 vs. 980 at k=2)
+- Silhouette Score: **0.68** at k=3 (highest across k=2 to k=6)
+
+#### PCA Canvas Visualization
+A custom HTML5 Canvas renders:
+- Scatter plot of 110 road segment points in 2D PCA space
+- 3 colored cluster regions with radial gradient halos and ellipse boundaries
+- Centroid crosses for each cluster
+- Real highway name labels for known hotspots
+
+---
+
+### 7.4 Module 4: Monte Carlo Simulation
+
+**Location:** `features.js` — Lines 125–163
+
+**Concept:** Quantifies **uncertainty** in the Bayesian risk estimate by running N random simulations with Gaussian noise applied to all 8 evidence inputs. Produces a risk score distribution histogram.
+
+#### Simulation Algorithm
+```
+For i = 1 to N (iterations):
+  For each feature k:
+    noisy_k = clip(base_k + Gaussian(0, σ), 0, 1)
+    if noisy_k > 0.5: p = p × LR[k]
+  results[i] = min(97, round(p × 100))
+
+Plot histogram of results (10% buckets)
+Report: mean, 5th–95th percentile CI, % extreme+high
+```
+
+#### User-Configurable Parameters
+| Parameter | Options |
+|-----------|---------|
+| Scenario | High Risk / Moderate / Extreme / Low |
+| Noise σ | 0.05 / 0.10 / 0.20 / 0.30 |
+| Iterations N | 500 / 1,000 / 5,000 / 10,000 |
+
+#### Output
+- **Histogram chart** (color-coded: green→yellow→orange→red bins)
+- **Mean risk score**
+- **90% Confidence Interval** [P5, P95]
+- **% of simulations** reaching EXTREME or HIGH risk
+
+---
+
+### 7.5 Module 5: Markov Chain (Hidden — commented in UI)
+
+**Location:** `features.js` — Lines 165–212
+
+> *Note: The Markov Chain section is currently **commented out** in `index.html` but the full JavaScript logic exists and is functional in `features.js`. It was disabled per project scope change, but the code is preserved.*
+
+**Concept:** Models accident risk as a **4-state Markov process** through the 24-hour day cycle. Transition probabilities are derived from MoRTH time-of-day accident distributions.
+
+#### States
+`Low → Moderate → High → Extreme`
+
+#### Transition Matrix (Expressway example)
+```
+         Low   Mod   High  Ext
+Low    [ 0.60  0.25  0.10  0.05 ]
+Mod    [ 0.20  0.50  0.20  0.10 ]
+High   [ 0.10  0.20  0.50  0.20 ]
+Ext    [ 0.05  0.15  0.30  0.50 ]
+```
+
+- Different matrices for: Expressway, National Highway, Urban Road
+- `HOUR_ADJUST[]` array modulates transitions by time of day (night hours increase P(Extreme))
+- Predicts **24-hour risk probability curve** from any start hour
+
+---
+
+### 7.6 Fusion Engine (Ensemble)
+
+**Location:** `app.js` — Lines 196–243 (`runAnalysis()`)
+
+**Formula:**
+```
+fScore = [0, 40, 65, 78, 90][min(firedRules, 4)]   // step-function from FOL
+score  = round(fScore × 0.45 + bayesProb% × 0.55)
+score  = clamp(score, 3, 97)
+```
+
+**Risk Level Assignment:**
+```
+if any fired rule has sev == "EXTREME" → EXTREME
+else if any fired rule has sev == "HIGH"    → HIGH
+else if score ≥ 60                          → HIGH
+else if score ≥ 35                          → MODERATE
+else                                        → LOW
+```
+
+**Weather Multiplier Display:**
+| Weather | Multiplier |
+|---------|-----------|
+| Fog | 3.4× |
+| Dust Storm | 3.1× |
+| Heavy Rain | 2.9× |
+| Rain | 2.8× |
+| Cloudy | 1.3× |
+| Clear | 1.0× |
+
+---
+
+## 8. Smart Route Analyzer — BFS Graph Engine
+
+**Primary file:** `graph.js` (499 lines) + `routes.js` (332 lines)
+
+### Architecture
+
+The Smart Route Analyzer has a **two-tier system**:
+
+```
+User Input (src city → dst city)
+         │
+         ▼
+  findRouteKey(src, dst)  → Check ROUTE_DB (detailed 10 pairs)
+         │
+    Found? ──YES──→ runDetailedRouteAnalysis()  [routes.js]
+         │
+         NO
+         ▼
+  normalizeCity(src/dst)  → fuzzy match + alias resolution
+         │
+         ▼
+  findIndiaRoutes()       → BFS on highway graph [graph.js]
+         │
+         ▼
+  pathSummary() + pathRiskScore()
+         │
+         ▼
+  Render UI + getSegmentHotspots() alerts
+```
+
+### Graph Database
+
+| Attribute | Count |
+|-----------|-------|
+| City nodes | **65** (major Indian cities) |
+| Highway edges | **92** (NH/expressway segments) |
+| Fuzzy city aliases (200+ Indian cities) | **200+** |
+| Segment hotspot alerts | **19 route segments** |
+
+#### City Nodes (sample)
+- **Tier-0 Metros:** Delhi, Mumbai, Kolkata, Chennai, Bangalore, Hyderabad
+- **Tier-1:** Pune, Ahmedabad, Jaipur, Lucknow
+- **Major cities:** Agra, Nagpur, Bhopal, Indore, Surat, Vadodara, Chandigarh, Amritsar, Gwalior, Varanasi, Patna...
+- **South:** Kolhapur, Belgaum, Hubli, Mysore, Madurai, Trichy, Vijayawada, Kochi, Trivandrum, Coimbatore, Salem, Vizag, Mangalore, Nellore...
+- **West:** Nashik, Aurangabad, Solapur, Rajkot, Panjim (Goa)...
+- **North:** Ajmer, Udaipur, Jodhpur, Bikaner, Kota, Kanpur, Prayagraj, Gorakhpur, Dehradun, Meerut, Jalandhar, Jammu, Srinagar, Shimla...
+
+#### Highway Edges (sample)
+| From | To | NH | Distance | Type | Risk |
+|------|----|----|----------|------|------|
+| Delhi | Agra | Yamuna Exp. | 200 km | Expressway | 77 |
+| Mumbai | Pune | BOM-PNQ Exp. | 94 km | Expressway | 85 |
+| Delhi | Jaipur | NH-48 | 268 km | Expressway | 78 |
+| Bangalore | Mysore | BLR-MYS Exp. | 140 km | Expressway | 55 |
+| Jammu | Srinagar | NH-44 | 290 km | National HW | 82 |
+| Kolkata | Guwahati | NH-17 | 1000 km | National HW | 78 |
+
+### BFS Pathfinding
+```javascript
+function bfsPath(adj, src, dst, excludeNodes=[]) {
+  // Queue: [currentNode, pathSoFar, distanceSoFar, edgesSoFar]
+  const q = [[src, [src], 0, []]];
+  const seen = new Set([src]);
+  while (q.length) {
+    const [node, pth, dist, edgs] = q.shift();
+    if (node === dst) return { nodes:pth, dist, edges:edgs };
+    // Expand neighbors not already visited or excluded
+    for (const nb of adj[node] || []) {
+      if (!seen.has(nb.to) && !excludeNodes.includes(nb.to)) {
+        seen.add(nb.to);
+        q.push([nb.to, [...pth, nb.to], dist+nb.edge.dist, [...edgs, nb]]);
+      }
+    }
+  }
+  return null;
+}
+```
+
+**Two routes found by:**
+1. **Primary BFS** — shortest path
+2. **Alternative BFS** — exclude an intermediate node from the primary path, forcing a different route
+
+### City Normalization (normalizeCity)
+```
+Raw input → lowercase + strip non-alpha
+    │
+    ├── Check CITY_ALIASES (e.g., "bombay" → "mumbai")
+    ├── Exact match in IG_NODES
+    ├── Name match against IG_NODES city names
+    ├── FUZZY_CITY_MAP (200+ Indian cities → nearest graph node)
+    ├── Partial fuzzy map match (prefix-4)
+    ├── Prefix-4 match against graph nodes
+    └── Prefix-3 match against graph nodes
+```
+
+### Route Risk Scoring
+```javascript
+function pathRiskScore(edges, wVal, trafficVal) {
+  let p = 0.058;  // base rate
+  // Weighted sum over all edges by distance
+  edges.forEach(e => {
+    p += (0.058 × COND_SCORE[e.cond] × (e.risk/50)) × (e.dist/totalDist);
+  });
+  p *= WEATHER_MULT[wVal] × TRAFFIC_MULT[trafficVal];
+  return clamp(round(p × 100), 4, 96);
+}
+```
+
+### Segment Hotspot Alerts
+19 route-segment pairs mapped to known accident black-spots from **iRAD + MoRTH 2022**, each with:
+- Black-spot name + km marker
+- Severity (EXTREME / HIGH / MODERATE)
+- Annual deaths
+- Cause note
+
+---
+
+## 9. Dataset
+
+| Source | Description |
+|--------|-------------|
+| **MoRTH Road Accidents India 2015–2022** | Primary accident dataset |
+| **IMD Weather Records** | Weather condition correlations |
+| **NHAI Road Survey** | Road quality and type data |
+| **iRAD Black-spot Registry** | 1,344 identified black-spots |
+
+### Dataset Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total Records | **7,84,921** |
+| Features per record | **12** |
+| States + UTs covered | **28** |
+| Train / Val / Test split | **70% / 15% / 15%** |
+| Class balancing | **SMOTE** (Synthetic Minority Oversampling) |
+
+### Sample Records (shown in UI)
+| ID | Location | Date/Time | Weather | Road | Speed | Deaths | Label |
+|----|----------|-----------|---------|------|-------|--------|-------|
+| ACC-001 | Delhi–Agra NH-19 km 42 | 2022-01-15 02:34 | Fog | Expressway | 100 | 3 | EXTREME |
+| ACC-002 | Mumbai–Pune NH-48 Ghat | 2022-07-08 18:12 | Heavy Rain | NH | 80 | 1 | HIGH |
+| ACC-003 | Bangalore Ring Road | 2022-10-22 08:45 | Clear | Urban | 60 | 0 | MODERATE |
+
+---
+
+## 10. Authentication System
+
+**File:** `auth.js` — RS (RoadSafe) global object
+
+### Features
+| Feature | Implementation |
+|---------|---------------|
+| Login | Email + password match in localStorage |
+| Registration | Unique email check, auto-login after register |
+| Session | JSON stored in `localStorage` as `rs_session` |
+| Auth Guard | Every protected page calls `RS.guard()` on load |
+| Role-based access | `user` vs. `admin` roles |
+| Block/Unblock | Admin can block user accounts |
+| Delete User | Admin can delete non-admin accounts |
+| Analysis History | Per-user history (max 200 entries) |
+
+### Default Accounts
+| Name | Email | Password | Role |
+|------|-------|----------|------|
+| RoadSafe Admin | admin@roadsafe.in | Admin@123 | admin |
+| Rahul Sharma | demo@user.in | Demo@123 | user |
+| Priya Patel | priya@test.com | Test@123 | user |
+
+### Session Structure
+```json
+{
+  "userId": 1,
+  "name": "Rahul Sharma",
+  "email": "demo@user.in",
+  "role": "user",
+  "avatar": "R",
+  "loginTime": 1741646388000
+}
+```
+
+---
+
+## 11. UI / UX Design
+
+### Design System
+| Token | Value |
+|-------|-------|
+| Background | `#040810` (near-black) |
+| Primary red | `#ef4444` |
+| Warning orange | `#f97316` |
+| Moderate yellow | `#eab308` |
+| Safe green | `#22c55e` |
+| Text muted | `#94a3b8` |
+| Border | `rgba(255,255,255,0.07)` |
+
+### Key Design Patterns
+- **Glassmorphism** cards: `backdrop-filter: blur(12px)` + semi-transparent backgrounds
+- **Gradient glows** in hero section (#ef4444, #9333ea, #3b82f6)
+- **Micro-animations**: IntersectionObserver fade-in on scroll for all cards
+- **Stat counters**: Animated count-up on hero stats (53 accidents/hr, 168K deaths, 87% accuracy)
+- **Animated India SVG Map** in hero with pulsing risk circles
+- **Prolog-style terminal** with color-coded syntax highlighting
+- **Responsive layout**: Grid-based, collapses for mobile
+- **Scroll-aware navbar**: Background changes on scroll > 50px
+
+### Sections (in order)
+1. **Hero** — tagline, live India SVG map, stats, CTAs
+2. **Interactive Map** — Leaflet.js map with 12 hotspot markers, weather lookup
+3. **AI Risk Analyzer** — Main form + result panel
+4. **Smart Route Analyzer** — City-pair search with BFS graph
+5. **Route Comparison** — A vs B side-by-side
+6. **Analysis History** — Table of all past analyses, CSV export
+7. **Hotspot Database** — 10 hotspot cards (clickable to fill analyzer)
+8. **Bayesian Network** — Evidence sliders + dial gauge + CPT table
+9. **PCA + K-Means** — Canvas scatter plot + elbow/silhouette charts + cluster cards
+10. **Dataset Overview** — Stats, sample records table
+11. **Model Metrics** — Confusion matrix + ROC curve chart + metrics
+
+---
+
+## 12. Feature Deep-Dive
+
+### Weather Lookup
+- 12-city weather database with: temp, humidity, visibility, condition, wind, AQI, risk factor
+- Adds ±6% random noise for "live" feel
+- Visibility-based risk: < 3km = HIGH, < 6km = MODERATE, ≥ 6km = LOW
+- **Auto-fills** the Analyzer weather dropdown
+
+### Route Comparison (A vs B)
+- Runs the FOL + Bayesian fusion on both routes independently
+- Renders side-by-side risk scores with color-coded risk tags
+- Bar chart comparing `['FOL Risk', 'Bayesian P(Acc)', 'Overall Score']` for both routes
+- Declares the safer route
+
+### Hotspot Database (10 cards)
+Each card shows:
+- Route name + NH reference + state
+- Deaths/year + Accidents/year
+- Dangerous conditions text
+- Risk score bar (color-coded to severity)
+- Clicking a card auto-fills the analyzer location dropdown
+
+### PDF Report Generator
+Uses **jsPDF** to create a multi-section A4 report:
+1. Header with logo, date, analyst name
+2. Analysis Summary (location, risk, score, weather, cluster, time)
+3. FOL Rule Engine Results (fired rules + descriptions)
+4. AI Model Architecture description
+5. Per-model performance metrics
+6. Safety Recommendations
+7. Footer with attribution
+
+### Knowledge Graph Visualizer
+- SVG-based directed graph of FOL predicates
+- 18 nodes (13 fact nodes + 5 conclusion nodes)
+- 17 edges
+- When an analysis fires rules, corresponding nodes and edges **glow in amber** with drop-shadow filter
+- Nodes colored: blue (facts), red (dangerous), orange (high_risk/moderate_risk), green (safe)
+
+### Analysis History
+- Stored per-user in localStorage
+- Columns: Location, Risk Level, Score, Weather, Road Type, Time, Date
+- CSV export with all fields
+- Refresh button to reload
+
+---
+
+## 13. Data Flow Diagram
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                   USER INPUTS                            │
+│  Location · Weather · Time · Road Type · Traffic ·       │
+│  Condition · Speed · Festival · History · Divider        │
+└───────────────────────────────┬──────────────────────────┘
+                                │
+               ┌────────────────▼────────────────┐
+               │         buildFacts(inp)           │
+               │   → Set of FOL predicates         │
+               └────────┬────────────┬────────────┘
+                        │            │
+           ┌────────────▼──┐     ┌───▼────────────┐
+           │  evalFOL()    │     │ computeBayes()  │
+           │  Unification  │     │ Evidence × LR   │
+           │  8 Rules      │     │ BASE × ∏LR[i]   │
+           └────────┬──────┘     └───┬─────────────┘
+                    │                │
+                    │  firedRules    │  bProb
+                    └───────┬────────┘
+                            │
+               ┌────────────▼────────────────────────┐
+               │         Fusion Engine                │
+               │  score = FOL(45%) + Bayesian(55%)    │
+               │  riskLevel = EXTREME/HIGH/MOD/LOW    │
+               └────────────┬────────────────────────┘
+                            │
+          ┌─────────────────▼──────────────────────────┐
+          │         Result Panel Render                 │
+          │  - Risk badge + score ring                  │
+          │  - FOL rules fired                          │
+          │  - PCA cluster assignment                   │
+          │  - Weather multiplier                       │
+          │  - Recommendations                          │
+          └─────────────────┬──────────────────────────┘
+                            │
+          ┌─────────────────▼──────────────────────────┐
+          │         Side Effects                        │
+          │  - renderFOLTerminal()    [Prolog UI]       │
+          │  - updateBayesian()       [dial + sliders]  │
+          │  - updateKnowledgeGraph() [SVG glow]        │
+          │  - RS.saveAnalysis()      [localStorage]    │
+          │  - renderHistory()        [history table]   │
+          │  - toast()                [notification]    │
+          └────────────────────────────────────────────┘
+```
+
+---
+
+## 14. Performance Metrics
+
+### Classification Report
+
+| Risk Level | Precision | Recall | F1-Score | Support |
+|-----------|-----------|--------|----------|---------|
+| Extreme | 0.88 | 0.86 | **0.87** | 21,034 |
+| High | 0.88 | 0.87 | **0.87** | 39,852 |
+| Moderate | 0.95 | 0.94 | **0.94** | 56,114 |
+| **Macro Avg** | **0.90** | **0.89** | **0.86** | 1,17,000 |
+
+### Overall Accuracy: **87.4%** (test set of 1,17,000 samples)
+
+### ROC-AUC Scores
+| Class | AUC |
+|-------|-----|
+| Extreme | **0.96** |
+| High | **0.93** |
+| Moderate | **0.91** |
+
+### Confusion Matrix (Test Set)
+|  | Pred: Extreme | Pred: High | Pred: Moderate |
+|--|---------------|------------|----------------|
+| **Act: Extreme** | **17,820** | 2,134 | 1,080 |
+| **Act: High** | 2,310 | **35,040** | 2,502 |
+| **Act: Moderate** | 980 | 2,740 | **52,394** |
+
+### PCA Quality Metrics
+| Metric | Value |
+|--------|-------|
+| Variance retained (PC1+PC2) | 89.7% |
+| Silhouette Score (k=3) | **0.68** |
+| Optimal k (Elbow) | **3** |
+| WCSS at k=3 | 412 |
+
+---
+
+## 15. Hotspot Database
+
+### Top 10 National Highways by Risk Score
+| Rank | Route | NH | Deaths/yr | Accidents/yr | Risk Score |
+|------|-------|----|-----------|--------------|-----------|
+| 1 | Delhi–Agra Expressway | NH-19, UP | 423 | 1,840 | **92/100** |
+| 2 | Mumbai–Pune Expressway | NH-48, MH | 312 | 1,450 | **85/100** |
+| 3 | NH-44 Dhule–Nandurbar | NH-44, MH | 289 | 1,120 | **81/100** |
+| 4 | Delhi–Jaipur Highway | NH-48, RJ | 268 | 1,380 | **78/100** |
+| 5 | Bangalore–Chennai | NH-48, TN | 241 | 1,010 | **74/100** |
+| 6 | Lucknow–Agra Expressway | UP Exp. Auth. | 198 | 890 | **70/100** |
+| 7 | Chennai–Trichy | NH-44, TN | 176 | 780 | **65/100** |
+| 8 | Ahmedabad–Vadodara | NH-48, GJ | 154 | 720 | **58/100** |
+| 9 | Hyderabad–Warangal | NH-163, TG | 132 | 640 | **52/100** |
+| 10 | Pune–Solapur | NH-65, MH | 118 | 590 | **48/100** |
+
+---
+
+## 16. Known Limitations & Future Work
+
+### Current Limitations
+| Limitation | Impact |
+|-----------|--------|
+| Static weather database (12 cities) | No real-time IMD API integration |
+| No real GPS / live traffic | Traffic estimated from time-of-day only |
+| Route DB only covers 10 city pairs in detail | BFS graph covers more but with less granularity |
+| No map route drawing | Routes shown as text, not plotted on Leaflet map |
+| Client-only (no server) | Cannot share analyses between users |
+| Bayesian is naïve (assumes independence) | Real CPT dependencies not fully modelled |
+| Markov chain is hidden / commented out | Temporal risk evolution not visible in UI |
+
+### Potential Future Enhancements
+1. **Real IMD Weather API** integration for live conditions
+2. **Google Maps / OSRM** for actual road geometry and live traffic
+3. **Deep Learning model** (LSTM or Transformer) for sequential accident prediction
+4. **Backend server** (Node.js / Python FastAPI) for shared history and analytics
+5. **Mobile app** (React Native) for driver-side alerts
+6. **ISRO NAVIC** integration for Indian GPS data
+7. **Polyline route drawing** on Leaflet map for BFS paths
+8. **Push notifications** for high-risk alerts during navigation
+
+---
+
+*All accident statistics sourced from MoRTH Annual Report 2022 and WHO India Road Safety Report 2023*

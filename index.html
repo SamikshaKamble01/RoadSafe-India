@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>RoadSafe India — AI Accident Hotspot Predictor</title>
+  <meta name="description"
+    content="AI-powered road accident hotspot predictor using Prolog FOL, Bayesian Inference and PCA Clustering on MoRTH datasets." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css?v=4" />
+  <!-- Theme engine — load first to prevent flash -->
+  <script src="theme.js?v=2"></script>
+</head>
+
+<body>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer"
+    style="position:fixed;top:5rem;right:1rem;z-index:9998;display:flex;flex-direction:column;gap:.5rem;max-width:320px;">
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <div class="logo-shield">■</div>
+        <div><span class="logo-main">RoadSafe</span><span class="logo-india">India</span></div>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#hero" class="nav-link">Home</a></li>
+        <li><a href="#map" class="nav-link">Map</a></li>
+        <li><a href="#analyzer" class="nav-link">Analyzer</a></li>
+        <li><a href="#compare" class="nav-link">Compare</a></li>
+        <li><a href="#bayesian" class="nav-link">Bayesian</a></li>
+        <li><a href="#pca" class="nav-link">PCA</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:.75rem;margin-left:auto;flex-shrink:0">
+        <div class="nav-badge"><span class="pulse-dot"></span>Live AI</div>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <div id="navAvatar"
+            style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#9333ea);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;cursor:default">
+          </div>
+          <span id="navName" style="font-size:.82rem;font-weight:600;color:var(--txt-primary);white-space:nowrap"></span>
+        </div>
+        <button
+            id="themeToggleBtn"
+            onclick="toggleTheme()"
+            title="Toggle Dark/Light mode"
+            style="display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:99px;border:1px solid rgba(150,150,150,0.35);background:rgba(128,128,128,0.12);color:inherit;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .2s,border-color .2s;">
+          <span id="themeIcon" style="font-size:.95rem;line-height:1">&#9728;&#65039;</span>
+          <span id="themeLabel">Light</span>
+        </button>
+        <button onclick="RS.logout()"
+          style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:600;cursor:pointer;">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-grid"></div>
+      <div class="glow g1"></div>
+      <div class="glow g2"></div>
+      <div class="glow g3"></div>
+    </div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-pill">⚠ India — #1 Road Deaths Globally (WHO 2023)</div>
+        <h1 class="hero-title">Predict. Prevent.<br /><span class="grad">Save Lives.</span></h1>
+        <p class="hero-sub">An AI system combining <strong>Prolog FOL</strong>, <strong>Bayesian Networks</strong>,
+          <strong>PCA+K-Means</strong>, <strong>Monte Carlo</strong> simulations and <strong>Markov Chains</strong> on
+          real MoRTH India datasets.
+        </p>
+        <div class="hero-stats">
+          <div class="hstat">
+            <div class="hstat-n" data-to="53">0</div>
+            <div class="hstat-l">Accidents/Hour</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-n" data-to="168" data-suffix="K">0</div>
+            <div class="hstat-l">Deaths in 2022</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-n" data-to="87" data-suffix="%">0</div>
+            <div class="hstat-l">Model Accuracy</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-n" data-to="1344">0</div>
+            <div class="hstat-l">Black Spots</div>
+          </div>
+        </div>
+        <div class="hero-cta"><a href="#map" class="btn-primary">◆ View Live Map</a><a href="#analyzer"
+            class="btn-ghost">🔍 Analyze Route</a></div>
+      </div>
+      <div class="hero-right">
+        <div class="map-card">
+          <div class="map-card-top"><span class="map-label">Quick Hotspot Overview</span><span class="map-badge">MoRTH
+              2022</span></div>
+          <svg viewBox="0 0 360 440" class="india-svg">
+            <path
+              d="M145,28 L185,22 L228,33 L258,50 L272,76 L288,104 L298,132 L293,160 L282,185 L278,208 L288,228 L300,255 L308,280 L302,308 L285,332 L264,352 L244,370 L222,388 L200,408 L182,422 L170,408 L158,390 L143,372 L127,350 L112,325 L107,298 L116,272 L126,247 L130,222 L120,197 L110,172 L106,147 L111,122 L122,97 L138,72 Z"
+              fill="url(#mg)" stroke="rgba(239,68,68,0.4)" stroke-width="1.5" />
+            <defs>
+              <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="rgba(239,68,68,0.06)" />
+                <stop offset="100%" stop-color="rgba(220,38,38,0.12)" />
+              </linearGradient>
+            </defs>
+            <g transform="translate(188,182)">
+              <circle r="18" fill="rgba(239,68,68,0.1)" stroke="rgba(239,68,68,0.5)" stroke-width="1">
+                <animate attributeName="r" values="12;22;12" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle r="5" fill="#ef4444" /><text y="-14" font-size="9" fill="rgba(255,255,255,.85)"
+                text-anchor="middle" font-family="Inter">Delhi</text>
+            </g>
+            <g transform="translate(146,148)">
+              <circle r="14" fill="rgba(249,115,22,.1)" stroke="rgba(249,115,22,.5)" stroke-width="1">
+                <animate attributeName="r" values="10;18;10" dur="2.5s" repeatCount="indefinite" />
+              </circle>
+              <circle r="4" fill="#f97316" /><text y="-12" font-size="9" fill="rgba(255,255,255,.85)"
+                text-anchor="middle" font-family="Inter">Jaipur</text>
+            </g>
+            <g transform="translate(228,265)">
+              <circle r="16" fill="rgba(239,68,68,.1)" stroke="rgba(239,68,68,.5)" stroke-width="1">
+                <animate attributeName="r" values="11;20;11" dur="1.8s" repeatCount="indefinite" />
+              </circle>
+              <circle r="5" fill="#ef4444" /><text y="-13" font-size="9" fill="rgba(255,255,255,.85)"
+                text-anchor="middle" font-family="Inter">Mumbai</text>
+            </g>
+            <g transform="translate(162,295)">
+              <circle r="11" fill="rgba(234,179,8,.12)" stroke="rgba(234,179,8,.5)" stroke-width="1">
+                <animate attributeName="r" values="8;15;8" dur="3s" repeatCount="indefinite" />
+              </circle>
+              <circle r="4" fill="#eab308" /><text y="-12" font-size="9" fill="rgba(255,255,255,.85)"
+                text-anchor="middle" font-family="Inter">Pune</text>
+            </g>
+            <g transform="translate(200,330)">
+              <circle r="13" fill="rgba(239,68,68,.1)" stroke="rgba(239,68,68,.5)" stroke-width="1">
+                <animate attributeName="r" values="9;17;9" dur="2.6s" repeatCount="indefinite" />
+              </circle>
+              <circle r="4" fill="#ef4444" /><text y="-12" font-size="9" fill="rgba(255,255,255,.85)"
+                text-anchor="middle" font-family="Inter">Bangalore</text>
+            </g>
+          </svg>
+          <div class="map-legend"><span><span class="dot red"></span>Extreme</span><span><span
+                class="dot orange"></span>High</span><span><span class="dot yellow"></span>Moderate</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE MAP -->
+  <section id="map" class="section">
+    <div class="inner">
+      <div class="sec-label">◆ Geospatial Analysis</div>
+      <h2 class="sec-title">Interactive Accident Hotspot Map</h2>
+      <p class="sec-desc">Zoomable India map with real MoRTH accident black-spots. Click any marker for full risk
+        analysis. Use the weather lookup to auto-fill conditions.</p>
+      <div class="map-controls">
+        <div class="weather-lookup">
+          <input type="text" id="cityInput" class="fs weather-input"
+            placeholder="🔍 Enter city (e.g. Delhi, Mumbai)..." />
+          <button class="btn-weather" onclick="lookupWeather()">Get Live Weather</button>
+          <div id="weatherResult" class="weather-result" style="display:none"></div>
+        </div>
+        <div class="map-legend-row">
+          <span class="ml-item"><span class="ml-dot" style="background:#ef4444"></span>Extreme</span>
+          <span class="ml-item"><span class="ml-dot" style="background:#f97316"></span>High</span>
+          <span class="ml-item"><span class="ml-dot" style="background:#eab308"></span>Moderate</span>
+        </div>
+      </div>
+      <div id="leafletMap"
+        style="height:520px;border-radius:16px;border:1px solid rgba(255,255,255,.07);overflow:hidden;position:relative;z-index:1;">
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ANALYZER -->
+  <section id="analyzer" class="section dark-section">
+    <div class="inner">
+      <div class="sec-label">⚡ Real-Time Prediction</div>
+      <h2 class="sec-title">AI Risk Analyzer</h2>
+      <p class="sec-desc">Full 3-model pipeline: Prolog FOL + Bayesian Network + PCA cluster assignment. Results saved
+        to your history automatically.</p>
+      <div class="analyzer-wrap">
+        <div class="aform">
+          <!-- FEATURE 3: Live Weather Auto-Fetch -->
+          <div id="liveWeatherCard"></div>
+
+          <div class="fg"><label class="fl">📍 Location</label>
+            <select class="fs" id="location">
+              <option value="">Select location...</option>
+              <option value="Delhi–Agra Expressway">Delhi–Agra Expressway (NH-19)</option>
+              <option value="Mumbai–Pune Expressway">Mumbai–Pune Expressway (NH-48)</option>
+              <option value="Bangalore–Chennai">Bangalore–Chennai (NH-48)</option>
+              <option value="Delhi–Jaipur Highway">Delhi–Jaipur (NH-48)</option>
+              <option value="Lucknow–Agra Expressway">Lucknow–Agra Expressway</option>
+              <option value="NH-44 Dhule–Nandurbar">NH-44 Dhule–Nandurbar</option>
+              <option value="Chennai–Madurai">Chennai–Madurai (NH-44)</option>
+              <option value="Ahmedabad–Vadodara">Ahmedabad–Vadodara (NH-48)</option>
+            </select>
+          </div>
+          <!-- FEATURE 3: Weather city quick-search with live fetch -->
+          <div class="fg" style="margin-top:-.25rem">
+            <label class="fl" style="font-size:.7rem;color:var(--txt-muted)">🌐 Fetch Live Weather (type city name)</label>
+            <div class="input-with-mic">
+              <input class="fs" type="text" id="cityInput" placeholder="e.g. Delhi, Mumbai, Lucknow…"
+                style="font-size:.83rem" oninput="triggerLiveWeather(this.value)" />
+              <button class="mic-btn" id="micCityBtn" title="Speak city name"
+                onclick="startVoiceInput('cityInput','micCityBtn')">🎤</button>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">🌦️ Weather</label><select class="fs" id="weather">
+                <option value="clear">☀️ Clear</option>
+                <option value="cloudy">⛅ Cloudy</option>
+                <option value="rain">🌧️ Rain</option>
+                <option value="heavy_rain">⛈️ Heavy Rain</option>
+                <option value="fog">🌫️ Dense Fog</option>
+                <option value="dust">💨 Dust Storm</option>
+              </select></div>
+            <div class="fg"><label class="fl">🕐 Time of Day</label><select class="fs" id="timeofday">
+                <option value="morning">🌅 Morning (6–10 AM)</option>
+                <option value="day">☀️ Daytime (10–6 PM)</option>
+                <option value="evening">🌆 Evening (6–9 PM)</option>
+                <option value="night">🌙 Night (9 PM–6 AM)</option>
+              </select></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">▬ Road Type</label><select class="fs" id="roadtype">
+                <option value="expressway">Expressway</option>
+                <option value="national_highway">National Highway</option>
+                <option value="state_highway">State Highway</option>
+                <option value="urban">Urban Road</option>
+                <option value="rural">Rural Road</option>
+              </select></div>
+            <div class="fg"><label class="fl">▶ Traffic</label><select class="fs" id="traffic">
+                <option value="low">● Low</option>
+                <option value="moderate">● Moderate</option>
+                <option value="heavy">🔴 Heavy</option>
+                <option value="jam">⚠ Gridlock</option>
+              </select></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">🏗️ Road Condition</label><select class="fs" id="roadcondition">
+                <option value="good">✅ Good</option>
+                <option value="moderate">⚠️ Moderate</option>
+                <option value="poor">❌ Poor</option>
+                <option value="construction">■ Construction</option>
+              </select></div>
+            <div class="fg"><label class="fl">🏎️ Speed Limit</label><select class="fs" id="speedlimit">
+                <option value="40">40 km/h</option>
+                <option value="60">60 km/h</option>
+                <option value="80">80 km/h</option>
+                <option value="100">100 km/h</option>
+                <option value="120">120 km/h</option>
+              </select></div>
+          </div>
+          <div class="toggle-row">
+            <label class="tgl"><input type="checkbox" id="festival" class="ti" /><span class="ts"></span>Festival /
+              Holiday Season</label>
+            <label class="tgl"><input type="checkbox" id="accident_history" class="ti" checked /><span
+                class="ts"></span>Historical Accident Prone Zone</label>
+            <label class="tgl"><input type="checkbox" id="divider" class="ti" /><span class="ts"></span>Road Divider
+              Present</label>
+          </div>
+          <button class="btn-analyze" id="analyzeBtn" onclick="runAnalysis()">
+            <span class="btn-txt">🔍 Run Full AI Analysis</span>
+            <span class="btn-ld" style="display:none"><span class="spinner"></span> Running 3 AI Models...</span>
+          </button>
+          <!-- FEATURE 2: Speak result button -->
+          <button class="voice-speak-btn" id="speakResultBtn" onclick="toggleSpeechOutput()" style="display:none" title="Hear the result spoken aloud">
+            🔊 Speak Result
+          </button>
+          <button class="btn-pdf" id="pdfBtn" onclick="generatePDF()" style="display:none">📄 Download PDF
+            Report</button>
+        </div>
+        <div class="result-panel" id="resultPanel">
+          <div class="result-placeholder">
+            <div style="font-size:3rem;opacity:.25">▬</div>
+            <p style="color:var(--muted);text-align:center;font-size:.85rem">Set conditions and click Analyze</p>
+            <div class="model-icons"><span>● Bayesian BN</span><span>● PCA K-Means</span>
+            </div>
+          </div>
+        </div>
+        <!-- FEATURE 1: XAI Explanation Panel -->
+        <div id="xaiPanel"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SMART ROUTE ANALYZER -->
+  <section id="smartroute" class="section">
+    <div class="inner">
+      <div class="sec-label">◆ Intelligent Navigation</div>
+      <h2 class="sec-title">Smart Route Analyzer</h2>
+      <p class="sec-desc">Select <strong>any two cities</strong> in India — AI uses <strong>BFS graph search</strong>
+        across 40 cities &amp; 62 highway segments, auto-fetches real-time weather &amp; traffic, and <strong>recommends
+          the safest route</strong> right now.</p>
+      <div class="sra-supported">📡 <strong>Graph Engine:</strong> 40 Indian cities · 62 NH/Expressway segments · BFS
+        Pathfinding · Auto weather + traffic · Works for ANY city pair — Delhi→Mumbai, Kolkata→Chennai, Bangalore→Patna
+        &amp; more!</div>
+      <div class="sra-input-wrap">
+        <div class="sra-inputs">
+          <div class="fg"><label class="fl">🏙️ Source City</label><select class="fs" id="sra-src">
+              <option value="">Populating from graph...</option>
+            </select></div>
+          <div class="sra-arrow">→</div>
+          <div class="fg"><label class="fl">🏁 Destination City</label><select class="fs" id="sra-dst">
+              <option value="">Populating from graph...</option>
+            </select></div>
+        </div>
+        <div style="text-align:center;font-size:.72rem;color:var(--muted);margin-top:.75rem">Try: Delhi→Mumbai ·
+          Kolkata→Bangalore · Hyderabad→Chennai · Jaipur→Nashik</div>
+        <button class="btn-analyze" id="sraBtn" onclick="runSmartRouteAnalysis()"
+          style="max-width:380px;margin:1rem auto 0">🔍 Find Routes &amp; AI Recommend</button>
+      </div>
+      <div id="sraResult" style="margin-top:1.5rem"></div>
+    </div>
+  </section>
+
+  <!-- ROUTE COMPARISON -->
+  <section id="compare" class="section">
+    <div class="inner">
+      <div class="sec-label">🔄 Route Comparison</div>
+      <h2 class="sec-title">Compare Two Routes</h2>
+      <p class="sec-desc">Set conditions for Route A and Route B. The AI analyzes both and tells you which is safer with
+        a side-by-side comparison.</p>
+      <div class="compare-wrap">
+        <div class="compare-col" id="routeA">
+          <div class="compare-header route-a-header">🔵 Route A</div>
+          <div class="fg"><label class="fl">Location</label><select class="fs" id="cA-loc">
+              <option value="Delhi–Agra Expressway">Delhi–Agra (NH-19)</option>
+              <option value="Mumbai–Pune Expressway">Mumbai–Pune (NH-48)</option>
+              <option value="Bangalore–Chennai">Bangalore–Chennai</option>
+              <option value="Delhi–Jaipur Highway">Delhi–Jaipur</option>
+            </select></div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Weather</label><select class="fs" id="cA-weather">
+                <option value="clear">☀️ Clear</option>
+                <option value="rain">🌧️ Rain</option>
+                <option value="fog">🌫️ Fog</option>
+                <option value="heavy_rain">⛈️ Heavy Rain</option>
+              </select></div>
+            <div class="fg"><label class="fl">Time</label><select class="fs" id="cA-time">
+                <option value="day">Day</option>
+                <option value="night">Night</option>
+                <option value="morning">Morning</option>
+                <option value="evening">Evening</option>
+              </select></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Road Type</label><select class="fs" id="cA-road">
+                <option value="expressway">Expressway</option>
+                <option value="national_highway">NH</option>
+                <option value="urban">Urban</option>
+              </select></div>
+            <div class="fg"><label class="fl">Condition</label><select class="fs" id="cA-cond">
+                <option value="good">Good</option>
+                <option value="moderate">Moderate</option>
+                <option value="poor">Poor</option>
+              </select></div>
+          </div>
+          <div class="compare-result" id="resultA"><span style="color:var(--muted);font-size:.82rem">Configure and
+              compare</span></div>
+        </div>
+        <div class="compare-vs">VS</div>
+        <div class="compare-col" id="routeB">
+          <div class="compare-header route-b-header">🔴 Route B</div>
+          <div class="fg"><label class="fl">Location</label><select class="fs" id="cB-loc">
+              <option value="NH-44 Dhule–Nandurbar">NH-44 Dhule–Nandurbar</option>
+              <option value="Lucknow–Agra Expressway">Lucknow–Agra Exp.</option>
+              <option value="Chennai–Madurai">Chennai–Madurai</option>
+            </select></div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Weather</label><select class="fs" id="cB-weather">
+                <option value="fog">🌫️ Fog</option>
+                <option value="rain">🌧️ Rain</option>
+                <option value="clear">☀️ Clear</option>
+                <option value="heavy_rain">⛈️ Heavy Rain</option>
+              </select></div>
+            <div class="fg"><label class="fl">Time</label><select class="fs" id="cB-time">
+                <option value="night">Night</option>
+                <option value="morning">Morning</option>
+                <option value="day">Day</option>
+                <option value="evening">Evening</option>
+              </select></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Road Type</label><select class="fs" id="cB-road">
+                <option value="national_highway">NH</option>
+                <option value="expressway">Expressway</option>
+                <option value="state_highway">State HW</option>
+              </select></div>
+            <div class="fg"><label class="fl">Condition</label><select class="fs" id="cB-cond">
+                <option value="poor">Poor</option>
+                <option value="moderate">Moderate</option>
+                <option value="good">Good</option>
+              </select></div>
+          </div>
+          <div class="compare-result" id="resultB"><span style="color:var(--muted);font-size:.82rem">Configure and
+              compare</span></div>
+        </div>
+      </div>
+      <button class="btn-compare" onclick="runComparison()">🔄 Compare Routes</button>
+      <div id="compareChart" style="margin-top:1.5rem;display:none">
+        <div class="chart-card">
+          <div class="chart-title">Route Risk Comparison</div><canvas id="compChart" height="140"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MARKOV CHAIN -->
+
+  <!-- MARKOV CHAIN -->
+  <!-- <section id="markov" class="section">
+  <div class="inner">
+    <div class="sec-label">⏱️ Temporal AI</div>
+    <h2 class="sec-title">Markov Chain — Hourly Risk Predictor</h2>
+    <p class="sec-desc">Models accident risk as a <strong>Markov process</strong> through the 24-hour cycle. Transition probabilities derived from MoRTH time-of-day accident distributions. Predicts risk evolution from any starting hour.</p>
+    <div class="markov-wrap">
+      <div class="markov-controls">
+        <h3>Initial Conditions</h3>
+        <div class="fg"><label class="fl">Start Hour</label>
+          <select class="fs" id="markovHour">
+            <option value="0">12:00 AM (Midnight)</option><option value="6">6:00 AM (Dawn)</option>
+            <option value="8">8:00 AM (Rush Hour)</option><option value="12">12:00 PM (Noon)</option>
+            <option value="17">5:00 PM (Peak)</option><option value="20">8:00 PM (Night)</option>
+            <option value="22">10:00 PM (Late Night)</option>
+          </select></div>
+        <div class="fg"><label class="fl">Highway Type</label>
+          <select class="fs" id="markovType">
+            <option value="expressway">Expressway (High Speed)</option>
+            <option value="nh">National Highway</option>
+            <option value="urban">Urban Road</option>
+          </select></div>
+        <div class="markov-matrix" id="markovMatrix">
+          <div class="mm-title">Transition Matrix (States: Low/Moderate/High/Extreme)</div>
+          <div id="mmGrid"></div>
+        </div>
+        <button class="btn-analyze" onclick="runMarkov()">⏱️ Predict 24-Hour Risk</button>
+      </div>
+      <div class="markov-output">
+        <div class="chart-card"><div class="chart-title">24-Hour Risk Probability Curve</div><canvas id="markovChart" height="280"></canvas></div>
+        <div id="markovInsight" class="markov-insight"></div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+  <!-- WHAT-IF ANALYZER -->
+  <!-- <section id="whatif" class="section dark-section">
+  <div class="inner">
+    <div class="sec-label">📊 Sensitivity Analysis</div>
+    <h2 class="sec-title">What-If Sensitivity Analyzer</h2>
+    <p class="sec-desc">Change one variable at a time. See instantly how each factor contributes to the Bayesian risk probability. Understand which conditions matter most.</p>
+    <div class="whatif-wrap">
+      <div class="whatif-sliders" id="whatifSliders"></div>
+      <div class="whatif-output">
+        <div class="wi-current">
+          <div class="wi-label">Current P(Accident)</div>
+          <div class="wi-pct" id="wiPct">—</div>
+          <div class="wi-change" id="wiChange"></div>
+        </div>
+        <div class="chart-card" style="margin-top:.875rem"><div class="chart-title">Factor Sensitivity Table</div>
+          <div id="sensitivityTable"></div>
+        </div>
+        <div class="chart-card" style="margin-top:.875rem"><div class="chart-title">Sensitivity Radar</div>
+          <canvas id="sensitivityChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+
+  <!-- DRIVER RISK PROFILE -->
+
+  <!-- DRIVER RISK PROFILE -->
+  <!-- <section id="profile" class="section dark-section">
+  <div class="inner">
+    <div class="sec-label">👤 Personalization</div>
+    <h2 class="sec-title">Driver Risk Profile</h2>
+    <p class="sec-desc">Build your personal driver profile. The system generates a risk multiplier using Bayesian reasoning over your driving habits and history.</p>
+    <div class="profile-wrap">
+      <div class="profile-form" id="profileForm">
+        <h3>Your Driving Profile</h3>
+        <div class="frow"><div class="fg"><label class="fl">Age Group</label><select class="fs" id="p-age"><option value="18-25">18–25 (High risk)</option><option value="26-35" selected>26–35 (Moderate)</option><option value="36-50">36–50 (Lower risk)</option><option value="50+">50+ (Higher risk)</option></select></div>
+        <div class="fg"><label class="fl">Vehicle Type</label><select class="fs" id="p-vehicle"><option value="2w">Two-Wheeler ▶</option><option value="car" selected>Car / SUV ▶</option><option value="truck">Truck / HCV ▶</option><option value="bus">Bus ▶</option></select></div></div>
+        <div class="frow"><div class="fg"><label class="fl">Years of Driving Experience</label><select class="fs" id="p-exp"><option value="0-2">0–2 years</option><option value="3-5">3–5 years</option><option value="6-10" selected>6–10 years</option><option value="10+">10+ years</option></select></div>
+        <div class="fg"><label class="fl">Night Driving Frequency</label><select class="fs" id="p-night"><option value="never">Never</option><option value="rarely">Rarely</option><option value="often" selected>Often (1–3×/week)</option><option value="always">Daily</option></select></div></div>
+        <div class="frow"><div class="fg"><label class="fl">Past Traffic Violations</label><select class="fs" id="p-violations"><option value="0" selected>None</option><option value="1-2">1–2 violations</option><option value="3-5">3–5 violations</option><option value="5+">5+ violations</option></select></div>
+        <div class="fg"><label class="fl">Highway Driving Frequency</label><select class="fs" id="p-highway"><option value="never">Rarely</option><option value="sometimes" selected>Sometimes</option><option value="often">Often</option><option value="daily">Daily</option></select></div></div>
+        <div class="toggle-row">
+          <label class="tgl"><input type="checkbox" id="p-fatigue" class="ti"/><span class="ts"></span>Often drives while fatigued</label>
+          <label class="tgl"><input type="checkbox" id="p-phone" class="ti"/><span class="ts"></span>Uses phone while driving</label>
+          <label class="tgl"><input type="checkbox" id="p-belt" class="ti" checked/><span class="ts"></span>Always wears seatbelt</label>
+        </div>
+        <button class="btn-analyze" onclick="computeDriverProfile()">👤 Generate Risk Profile</button>
+      </div>
+      <div class="profile-result" id="profileResult">
+        <div class="result-placeholder">
+          <div style="font-size:2.5rem;opacity:.25">👤</div>
+          <p style="color:var(--muted);text-align:center;font-size:.85rem">Fill in your profile and generate</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+  <!-- ANALYSIS HISTORY -->
+  <section id="history" class="section">
+    <div class="inner">
+      <div class="sec-label">📜 Your Analyses</div>
+      <h2 class="sec-title">Analysis History</h2>
+      <p class="sec-desc">All your past analyses saved locally. Re-load any analysis or export your history as CSV.</p>
+      <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-bottom:1rem">
+        <button class="btn-ghost" onclick="exportHistoryCSV()" style="font-size:.82rem;padding:8px 18px">📥 Export
+          CSV</button>
+        <button onclick="renderHistory()" class="btn-ghost" style="font-size:.82rem;padding:8px 18px">🔄
+          Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th>Risk Level</th>
+              <th>Score</th>
+              <th>Weather</th>
+              <th>Road</th>
+              <th>Time</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOTSPOT DATABASE -->
+  <section id="hotspots" class="section dark-section">
+    <div class="inner">
+      <div class="sec-label">🗺️ Black-spots</div>
+      <h2 class="sec-title">India's Accident Hotspot Database</h2>
+      <p class="sec-desc">Sourced from iRAD + MoRTH 2022. Click any card to auto-fill the analyzer.</p>
+      <div class="hs-grid" id="hotspotGrid"></div>
+    </div>
+  </section>
+
+  <!-- BAYESIAN -->
+  <section id="bayesian" class="section">
+    <div class="inner">
+      <div class="sec-label">● Probabilistic AI</div>
+      <h2 class="sec-title">Bayesian Risk Network</h2>
+      <p class="sec-desc">Adjust evidence probabilities. Computes <strong>P(Accident | evidence)</strong> using CPTs
+        trained on 5.5 lakh MoRTH records.</p>
+      <div class="bayes-wrap">
+        <div class="bayes-left">
+          <h3>Evidence Inputs (CPT Priors)</h3>
+          <div id="bayesSliders"></div>
+          <div class="cpt-box">
+            <div class="cpt-title">Sample CPT — P(Accident | Rain, Night, Highway)</div>
+            <table class="cpt-table">
+              <thead>
+                <tr>
+                  <th>Rain</th>
+                  <th>Night</th>
+                  <th>Highway</th>
+                  <th>P(HIGH)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Yes</td>
+                  <td>Yes</td>
+                  <td>Yes</td>
+                  <td class="cpt-high">0.73</td>
+                </tr>
+                <tr>
+                  <td>Yes</td>
+                  <td>Yes</td>
+                  <td>No</td>
+                  <td class="cpt-med">0.54</td>
+                </tr>
+                <tr>
+                  <td>Yes</td>
+                  <td>No</td>
+                  <td>Yes</td>
+                  <td class="cpt-med">0.48</td>
+                </tr>
+                <tr>
+                  <td>No</td>
+                  <td>Yes</td>
+                  <td>Yes</td>
+                  <td class="cpt-med">0.42</td>
+                </tr>
+                <tr>
+                  <td>No</td>
+                  <td>No</td>
+                  <td>No</td>
+                  <td class="cpt-low">0.11</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn-update" onclick="updateBayesian()">🔄 Update Network</button>
+        </div>
+        <div class="bayes-right">
+          <div class="bn-vis" id="bayesNetwork"></div>
+          <div class="dial-wrap"><svg viewBox="0 0 220 130" class="dial-svg">
+              <path d="M22,108 A88,88 0 0,1 198,108" stroke="rgba(255,255,255,.07)" stroke-width="14" fill="none"
+                stroke-linecap="round" />
+              <path id="dialArc" d="M22,108 A88,88 0 0,1 110,20" stroke="url(#dg)" stroke-width="14" fill="none"
+                stroke-linecap="round" />
+              <defs>
+                <linearGradient id="dg">
+                  <stop offset="0%" stop-color="#22c55e" />
+                  <stop offset="50%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#ef4444" />
+                </linearGradient>
+              </defs>
+              <text x="110" y="112" text-anchor="middle" fill="white" font-size="30" font-weight="700"
+                font-family="Inter" id="dialPct">42%</text>
+              <text x="110" y="126" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="10"
+                font-family="Inter">P(Accident)</text>
+            </svg></div>
+          <div id="probBreakdown"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PCA -->
+  <section id="pca" class="section dark-section">
+    <div class="inner">
+      <div class="sec-label">● Dimensionality Reduction</div>
+      <h2 class="sec-title">PCA + K-Means Clustering</h2>
+      <p class="sec-desc">12 road features → 2 principal components. 89.7% variance retained. K=3 validated by Elbow +
+        Silhouette Score = 0.68.</p>
+      <div class="pca-wrap">
+        <div class="pca-left">
+          <div class="canvas-wrap"><canvas id="pcaCanvas" width="540" height="400"></canvas></div>
+          <div class="elbow-row">
+            <div class="chart-card sm-chart">
+              <div class="chart-title">Elbow Method</div><canvas id="elbowChart" height="160"></canvas>
+            </div>
+            <div class="chart-card sm-chart">
+              <div class="chart-title">Silhouette Score</div><canvas id="silhouetteChart" height="160"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="pca-right">
+          <div class="cluster-cards">
+            <div class="cluster-card red-card"><span class="cnum">C1</span><strong>EXTREME RISK</strong>
+              <p>Highway+Night+Rain+Poor. n=2,810 roads. P(accident)=0.73</p>
+              <div class="cbar">
+                <div class="cfill" style="width:73%;background:#ef4444"></div>
+              </div>
+            </div>
+            <div class="cluster-card orange-card"><span class="cnum">C2</span><strong>HIGH RISK</strong>
+              <p>Urban+Peak+Moderate. n=4,240 roads. P(accident)=0.48</p>
+              <div class="cbar">
+                <div class="cfill" style="width:48%;background:#f97316"></div>
+              </div>
+            </div>
+            <div class="cluster-card green-card"><span class="cnum">C3</span><strong>MODERATE RISK</strong>
+              <p>Daytime+Clear+Good. n=3,120 roads. P(accident)=0.18</p>
+              <div class="cbar">
+                <div class="cfill" style="width:18%;background:#22c55e"></div>
+              </div>
+            </div>
+          </div>
+          <div class="var-card">
+            <h4>Explained Variance</h4>
+            <div class="vbar-row"><span class="vl">PC1</span>
+              <div class="vtr">
+                <div class="vf red-vf" style="width:68.4%">68.4%</div>
+              </div>
+            </div>
+            <div class="vbar-row"><span class="vl">PC2</span>
+              <div class="vtr">
+                <div class="vf orange-vf" style="width:21.3%">21.3%</div>
+              </div>
+            </div>
+            <div class="vbar-row"><span class="vl">PC3</span>
+              <div class="vtr">
+                <div class="vf purple-vf" style="width:7.1%">7.1%</div>
+              </div>
+            </div>
+            <div class="var-note">✅ 89.7% variance captured — adequate for 2D projection</div>
+          </div>
+          <div class="load-card">
+            <h4>PC1 Feature Loadings</h4>
+            <table class="load-table">
+              <tr>
+                <td>Historical Accidents</td>
+                <td class="pos-l">+0.88</td>
+              </tr>
+              <tr>
+                <td>Speed Limit</td>
+                <td class="pos-l">+0.81</td>
+              </tr>
+              <tr>
+                <td>Night Driving</td>
+                <td class="pos-l">+0.76</td>
+              </tr>
+              <tr>
+                <td>Weather Severity</td>
+                <td class="pos-l">+0.74</td>
+              </tr>
+              <tr>
+                <td>Visibility</td>
+                <td class="neg-l">−0.71</td>
+              </tr>
+              <tr>
+                <td>Road Surface Quality</td>
+                <td class="neg-l">−0.68</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- DATASET -->
+  <section id="dataset" class="section dark-section">
+    <div class="inner">
+      <div class="sec-label">📂 Data Source</div>
+      <h2 class="sec-title">Dataset Overview</h2>
+      <p class="sec-desc"><strong>MoRTH Road Accidents India 2015–2022</strong> · IMD Weather Records · NHAI Road Survey
+        · iRAD Black-spot Registry</p>
+      <div class="ds-grid">
+        <div class="ds-card">
+          <div class="ds-icon">🗄️</div>
+          <div class="ds-num">7,84,921</div>
+          <div class="ds-lbl">Total Records</div>
+        </div>
+        <div class="ds-card">
+          <div class="ds-icon">📐</div>
+          <div class="ds-num">12</div>
+          <div class="ds-lbl">Features</div>
+        </div>
+        <div class="ds-card">
+          <div class="ds-icon">🗺️</div>
+          <div class="ds-num">28</div>
+          <div class="ds-lbl">States + UTs</div>
+        </div>
+        <div class="ds-card">
+          <div class="ds-icon">✂️</div>
+          <div class="ds-num">70/15/15</div>
+          <div class="ds-lbl">Train/Val/Test</div>
+        </div>
+        <div class="ds-card">
+          <div class="ds-icon">⚖️</div>
+          <div class="ds-num">SMOTE</div>
+          <div class="ds-lbl">Balancing</div>
+        </div>
+        <div class="ds-card">
+          <div class="ds-icon">📊</div>
+          <div class="ds-num">87.4%</div>
+          <div class="ds-lbl">Accuracy</div>
+        </div>
+      </div>
+      <h3 class="subsec">Sample Dataset Records</h3>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Location</th>
+              <th>Date/Time</th>
+              <th>Weather</th>
+              <th>Road Type</th>
+              <th>Speed Lmt</th>
+              <th>Deaths</th>
+              <th>Label</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ACC-001</td>
+              <td>Delhi–Agra NH-19 km 42</td>
+              <td>2022-01-15 02:34</td>
+              <td>🌫️ Fog</td>
+              <td>Expressway</td>
+              <td>100</td>
+              <td>3</td>
+              <td><span class="risk-tag extreme">EXTREME</span></td>
+            </tr>
+            <tr>
+              <td>ACC-002</td>
+              <td>Mumbai–Pune NH-48 Ghat</td>
+              <td>2022-07-08 18:12</td>
+              <td>🌧️ Heavy Rain</td>
+              <td>NH</td>
+              <td>80</td>
+              <td>1</td>
+              <td><span class="risk-tag high">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>ACC-003</td>
+              <td>Bangalore Ring Road</td>
+              <td>2022-10-22 08:45</td>
+              <td>☀️ Clear</td>
+              <td>Urban</td>
+              <td>60</td>
+              <td>0</td>
+              <td><span class="risk-tag moderate">MODERATE</span></td>
+            </tr>
+            <tr>
+              <td>ACC-004</td>
+              <td>NH-44 Dhule km 88</td>
+              <td>2022-12-31 23:15</td>
+              <td>⛅ Cloudy</td>
+              <td>NH</td>
+              <td>80</td>
+              <td>5</td>
+              <td><span class="risk-tag extreme">EXTREME</span></td>
+            </tr>
+            <tr>
+              <td>ACC-005</td>
+              <td>Chennai–Trichy NH-45</td>
+              <td>2022-05-14 03:10</td>
+              <td>🌧️ Rain</td>
+              <td>NH</td>
+              <td>80</td>
+              <td>2</td>
+              <td><span class="risk-tag high">HIGH</span></td>
+            </tr>
+            <tr>
+              <td>ACC-006</td>
+              <td>Lucknow–Agra Exp. km 55</td>
+              <td>2021-11-08 04:05</td>
+              <td>🌫️ Fog</td>
+              <td>Expressway</td>
+              <td>100</td>
+              <td>7</td>
+              <td><span class="risk-tag extreme">EXTREME</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="foot-brand"><span style="font-size:1.5rem">■</span>
+        <div>
+          <div class="logo-main">RoadSafe India</div>
+          <div style="font-size:.72rem;color:var(--muted)">AI for Safer Roads</div>
+        </div>
+      </div>
+      <div class="foot-info">
+        <div><strong>AI Models:</strong> Prolog FOL · Bayesian Network (pgmpy) · PCA+K-Means · Monte Carlo · Markov
+          Chain</div>
+        <div><strong>Data:</strong> MoRTH 2022 · iRAD · IMD Weather · NHAI · OpenStreetMap</div>
+        <div style="opacity:.35;margin-top:.25rem">MFAI Project — VIT SEM 2 · 2026 · Accuracy: 87.4%</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="auth.js?v=2"></script>
+  <script src="app.js?v=2"></script>
+  <script src="routes.js?v=2"></script>
+  <script src="graph.js?v=4"></script>
+  <script src="features.js?v=2"></script>
+  <script src="ai_features.js?v=2"></script>
+  <script>
+    // Show speak button after first analysis
+    const _origRunAnalysis = window.runAnalysis;
+    // (patched inside ai_features.js — this just shows the speak button)
+    document.addEventListener('DOMContentLoaded', () => {
+      const origRA = window.runAnalysis;
+      if (typeof origRA === 'function') {
+        window.runAnalysis = async function() {
+          await origRA.call(this);
+          const sb = document.getElementById('speakResultBtn');
+          if (sb) sb.style.display = 'inline-flex';
+        };
+      }
+    });
+  </script>
+
+  <!-- FEATURE 4: Grok AI Chatbot -->
+  <button id="chatFab" onclick="toggleChat()" title="RoadSafe AI Assistant">🤖</button>
+  <div id="chatPanel">
+    <div class="chat-topbar">
+      <div class="chat-avatar">🤖</div>
+      <div class="chat-title">
+        <div class="chat-title-name">RoadSafe AI</div>
+        <div class="chat-title-sub">● Powered by Grok · Context-aware</div>
+      </div>
+      <button class="chat-clear-btn" onclick="clearChat()" title="Clear chat">🗑 Clear</button>
+    </div>
+    <div class="chat-ctx-bar" id="chatCtxBar">💡 Ask about road safety, risk scores, or your last analysis</div>
+    <div id="chatFeed"></div>
+    <div class="chat-input-row">
+      <input id="chatInput" type="text" placeholder="Ask anything about road safety…" autocomplete="off" />
+      <button id="chatSendBtn" onclick="sendChat()" title="Send">➤</button>
+    </div>
+  </div>
+
+</body>
+
+</html>

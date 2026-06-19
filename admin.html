@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>RoadSafe India — Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet"/>
+  <!-- Theme engine — load first to prevent flash -->
+  <script src="theme.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root[data-theme="dark"]{
+      --bg:#040810;--bg2:#0b1120;--bg3:#0f1929;--border:rgba(255,255,255,.07);
+      --red:#ef4444;--orange:#f97316;--green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
+      --text:#f1f5f9;--sub:#94a3b8;--muted:#475569;
+      --nav-bg:rgba(4,8,16,.95);--input-bg:rgba(0,0,0,.3);
+      --th-bg:rgba(255,255,255,.03);--row-hover:rgba(255,255,255,.02);
+      --scrollbar-thumb:#1e2d3d;
+    }
+    :root[data-theme="light"]{
+      --bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--border:rgba(0,0,0,.09);
+      --red:#dc2626;--orange:#ea580c;--green:#16a34a;--blue:#2563eb;--purple:#7c3aed;
+      --text:#0f172a;--sub:#475569;--muted:#94a3b8;
+      --nav-bg:rgba(255,255,255,.97);--input-bg:#f1f5f9;
+      --th-bg:#f8fafc;--row-hover:#f1f5f9;
+      --scrollbar-thumb:#cbd5e1;
+    }
+    :root{
+      --bg:#040810;--bg2:#0b1120;--bg3:#0f1929;--border:rgba(255,255,255,.07);
+      --red:#ef4444;--orange:#f97316;--green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
+      --text:#f1f5f9;--sub:#94a3b8;--muted:#475569;
+      --nav-bg:rgba(4,8,16,.95);--input-bg:rgba(0,0,0,.3);
+      --th-bg:rgba(255,255,255,.03);--row-hover:rgba(255,255,255,.02);
+      --scrollbar-thumb:#1e2d3d;
+    }
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb,#1e2d3d);border-radius:99px}
+    /* NAV */
+    .anav{background:var(--nav-bg);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);transition:background .25s}
+    .anav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;height:60px;gap:1.5rem;}
+    .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+    .logo-icon{font-size:1.3rem}.logo-main{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--text)}.logo-sub{font-size:.7rem;color:var(--red);font-weight:700;}
+    .admin-badge{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px;}
+    .nav-user{display:flex;align-items:center;gap:.75rem;margin-left:auto;}
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#9333ea);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;}
+    .nav-name{font-size:.85rem;font-weight:600;}
+    .btn-logout{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);padding:6px 14px;border-radius:99px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .btn-logout:hover{background:rgba(239,68,68,.2);}
+    .anav-tabs{display:flex;gap:.25rem;}
+    .atab{background:none;border:none;color:var(--sub);padding:5px 12px;border-radius:99px;font-size:.82rem;cursor:pointer;transition:all .2s;}
+    .atab.active,.atab:hover{background:rgba(255,255,255,.07);color:var(--text);}
+    /* LAYOUT */
+    .admin-body{max-width:1400px;margin:0 auto;padding:2rem 1.5rem;}
+    .page-section{display:none;}.page-section.active{display:block;}
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+    .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.5rem;text-align:center;position:relative;overflow:hidden;}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;}
+    .sc-red::before{background:var(--red)}.sc-orange::before{background:var(--orange)}.sc-green::before{background:var(--green)}.sc-blue::before{background:var(--blue)}.sc-purple::before{background:var(--purple)}
+    .stat-icon{font-size:1.8rem;margin-bottom:.5rem;}
+    .stat-val{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;line-height:1;}
+    .stat-lbl{font-size:.72rem;color:var(--sub);margin-top:.3rem;}
+    /* TABLE */
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+    .section-title{font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;}
+    .table-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .data-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+    .data-table th{background:var(--th-bg);padding:.75rem 1rem;text-align:left;font-size:.71rem;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);border-bottom:1px solid var(--border);font-weight:600;}
+    .data-table td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);}
+    .data-table tr:last-child td{border:none;}
+    .data-table tr:hover td{background:var(--row-hover);}
+    .role-tag{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:4px;font-weight:700;}
+    .role-admin{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);}
+    .role-user{background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.3);}
+    .status-tag{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:4px;font-weight:700;}
+    .st-active{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25);}
+    .st-blocked{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+    .risk-badge{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:4px;font-weight:700;}
+    .rb-EXTREME{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);}
+    .rb-HIGH{background:rgba(249,115,22,.15);color:#fb923c;border:1px solid rgba(249,115,22,.3);}
+    .rb-MODERATE{background:rgba(234,179,8,.15);color:#facc15;border:1px solid rgba(234,179,8,.3);}
+    .rb-LOW{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);}
+    .btn-sm{font-size:.72rem;padding:4px 10px;border-radius:6px;cursor:pointer;border:1px solid;transition:all .2s;font-weight:600;}
+    .btn-block{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:#fb923c;}
+    .btn-block:hover{background:rgba(249,115,22,.2);}
+    .btn-delete{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171;}
+    .btn-delete:hover{background:rgba(239,68,68,.2);}
+    /* SEARCH */
+    .search-input{background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;outline:none;width:200px;transition:border-color .2s;}
+    .search-input:focus{border-color:rgba(239,68,68,.4);}
+    /* Theme toggle */
+    .theme-toggle-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--sub);font-size:13px;font-weight:500;cursor:pointer;transition:background .2s,color .2s;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;}
+    [data-theme="light"] .theme-toggle-btn{background:rgba(0,0,0,.04);}
+    .theme-toggle-btn:hover{background:rgba(255,255,255,.1);color:var(--text);}
+    [data-theme="light"] .theme-toggle-btn:hover{background:rgba(0,0,0,.08);}
+    [data-theme="dark"]  .icon-moon{display:none}[data-theme="dark"]  .icon-sun{display:block}
+    [data-theme="light"] .icon-sun{display:none}[data-theme="light"] .icon-moon{display:block}
+    :root:not([data-theme]) .icon-moon{display:none}:root:not([data-theme]) .icon-sun{display:block}
+    /* CHARTS */
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;}
+    .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.5rem;}
+    .chart-title{font-size:.85rem;font-weight:600;color:var(--sub);margin-bottom:1rem;}
+    /* AVATAR */
+    .user-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;margin-right:8px;background:linear-gradient(135deg,#ef4444,#9333ea);}
+    /* TOAST */
+    .toast-container{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;}
+    .toast{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.75rem 1.25rem;font-size:.82rem;min-width:260px;animation:toastIn .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+    .toast.success{border-color:rgba(34,197,94,.4);color:#4ade80;}
+    .toast.error{border-color:rgba(239,68,68,.4);color:#f87171;}
+    @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    /* EMPTY */
+    .empty-state{text-align:center;padding:3rem;color:var(--muted);font-size:.85rem;}
+    .empty-icon{font-size:2.5rem;opacity:.3;margin-bottom:.75rem;}
+    .confirm-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+    .confirm-modal.show{display:flex;}
+    .confirm-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:380px;width:90%;text-align:center;}
+    .confirm-box h3{font-size:1.1rem;margin-bottom:.75rem;}
+    .confirm-box p{color:var(--sub);font-size:.85rem;margin-bottom:1.5rem;}
+    .confirm-btns{display:flex;gap:.75rem;justify-content:center;}
+    .cbtn{padding:9px 22px;border-radius:99px;font-weight:600;font-size:.85rem;cursor:pointer;border:none;}
+    .cbtn-cancel{background:rgba(255,255,255,.07);color:var(--text);}
+    .cbtn-confirm{background:var(--red);color:#fff;}
+  </style>
+</head>
+<body>
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+<!-- CONFIRM MODAL -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmMsg">Are you sure?</p>
+    <div class="confirm-btns">
+      <button class="cbtn cbtn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="cbtn cbtn-confirm" id="confirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="anav">
+  <div class="anav-inner">
+    <a class="logo" href="index.html"><span class="logo-icon">■</span><span class="logo-main">RoadSafe</span><span class="logo-sub">India</span></a>
+    <span class="admin-badge">■ Admin Panel</span>
+    <div class="anav-tabs">
+      <button class="atab active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="atab" onclick="showPage('users')">Users</button>
+      <button class="atab" onclick="showPage('analyses')">Analyses</button>
+      <button class="atab" onclick="showPage('analytics')">Analytics</button>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="adminAvatar">A</div>
+      <span class="nav-name" id="adminName">Admin</span>
+      <button
+          id="themeToggleBtn"
+          onclick="toggleTheme()"
+          title="Toggle Dark/Light mode"
+          style="display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:99px;border:1px solid rgba(150,150,150,0.35);background:rgba(128,128,128,0.12);color:inherit;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;transition:background .2s;">
+        <span id="themeIcon" style="font-size:.95rem;line-height:1">&#9728;&#65039;</span>
+        <span id="themeLabel">Light</span>
+      </button>
+      <button class="btn-logout" onclick="RS.logout()">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="admin-body">
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page-section active" id="page-dashboard">
+    <div class="section-header" style="margin-bottom:1.5rem">
+      <div>
+        <div style="font-size:.75rem;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem">Overview</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700">Admin Dashboard</h2>
+      </div>
+      <div style="font-size:.8rem;color:var(--sub)" id="adminDateTime"></div>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">▦ Risk Level Distribution</div><canvas id="riskChart" height="220"></canvas></div>
+      <div class="chart-card"><div class="chart-title">▲ Analyses Over Time (Last 7 Days)</div><canvas id="trendChart" height="220"></canvas></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:1.5rem">
+      <div class="chart-title">▲ Top Analyzed Locations</div>
+      <canvas id="locChart" height="140"></canvas>
+    </div>
+  </div>
+
+  <!-- USERS PAGE -->
+  <div class="page-section" id="page-users">
+    <div class="section-header">
+      <div><div style="font-size:.75rem;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem">User Management</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700">Registered Users</h2></div>
+      <input type="text" class="search-input" placeholder="◇ Search users..." oninput="renderUsers(this.value)"/>
+    </div>
+    <div class="table-card"><table class="data-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Joined</th><th>Analyses</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="usersTable"></tbody></table></div>
+  </div>
+
+  <!-- ANALYSES PAGE -->
+  <div class="page-section" id="page-analyses">
+    <div class="section-header">
+      <div><div style="font-size:.75rem;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem">Analysis Logs</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700">All User Analyses</h2></div>
+      <input type="text" class="search-input" placeholder="◇ Search..." oninput="renderAnalyses(this.value)"/>
+    </div>
+    <div class="table-card"><table class="data-table"><thead><tr><th>User</th><th>Location</th><th>Risk</th><th>Score</th><th>Weather</th><th>Time</th><th>Date</th></tr></thead>
+    <tbody id="analysesTable"></tbody></table></div>
+  </div>
+
+  <!-- ANALYTICS PAGE -->
+  <div class="page-section" id="page-analytics">
+    <div style="margin-bottom:1.5rem"><div style="font-size:.75rem;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem">System Analytics</div>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700">Advanced Analytics</h2></div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">◬ Weather Conditions in Analyses</div><canvas id="weatherChart2" height="240"></canvas></div>
+      <div class="chart-card"><div class="chart-title">▬ Road Type Distribution</div><canvas id="roadChart2" height="240"></canvas></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">◐ Peak Analysis Hours</div><canvas id="hourChart" height="220"></canvas></div>
+      <div class="chart-card"><div class="chart-title">▦ FOL Rules Trigger Rate</div><canvas id="folChart" height="220"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="auth.js"></script>
+<script>
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='rgba(255,255,255,0.06)';Chart.defaults.font.family='Inter';
+
+// Auth guard
+const session = RS.guard('admin');
+if(session){
+  document.getElementById('adminAvatar').textContent=session.avatar;
+  document.getElementById('adminName').textContent=session.name;
+}
+
+function showPage(p){
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  event.target.classList.add('active');
+  if(p==='dashboard')renderDashboard();
+  if(p==='users')renderUsers('');
+  if(p==='analyses')renderAnalyses('');
+  if(p==='analytics')renderAnalytics();
+}
+
+function toast(msg,type='success'){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+let confirmCallback=null;
+function openConfirm(title,msg,cb){
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmModal').classList.add('show');
+  confirmCallback=cb;
+  document.getElementById('confirmBtn').onclick=()=>{closeConfirm();cb();};
+}
+function closeConfirm(){document.getElementById('confirmModal').classList.remove('show');}
+
+function renderDashboard(){
+  const users=RS.getUsers(), hist=RS.getAllHistory();
+  const total=users.length, admins=users.filter(u=>u.role==='admin').length;
+  const analyses=hist.length;
+  const extreme=hist.filter(h=>h.riskLevel==='EXTREME').length;
+  const stats=[
+    {icon:'┌',val:total,lbl:'Total Users',cls:'sc-blue'},
+    {icon:'▦',val:analyses,lbl:'Total Analyses',cls:'sc-orange'},
+    {icon:'⚠',val:extreme,lbl:'Extreme Risk Alerts',cls:'sc-red'},
+    {icon:'■',val:admins,lbl:'Admin Accounts',cls:'sc-purple'},
+    {icon:'✓',val:users.filter(u=>!u.blocked).length,lbl:'Active Users',cls:'sc-green'},
+  ];
+  document.getElementById('statsGrid').innerHTML=stats.map(s=>`
+    <div class="stat-card ${s.cls}"><div class="stat-icon">${s.icon}</div>
+    <div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+
+  // Risk chart
+  const rc=document.getElementById('riskChart');if(rc._chart)rc._chart.destroy();
+  rc._chart=new Chart(rc,{type:'doughnut',data:{labels:['EXTREME','HIGH','MODERATE','LOW'],
+    datasets:[{data:[hist.filter(h=>h.riskLevel==='EXTREME').length,hist.filter(h=>h.riskLevel==='HIGH').length,hist.filter(h=>h.riskLevel==='MODERATE').length,hist.filter(h=>h.riskLevel==='LOW').length],
+    backgroundColor:['rgba(239,68,68,.85)','rgba(249,115,22,.85)','rgba(234,179,8,.8)','rgba(34,197,94,.8)'],borderColor:'rgba(0,0,0,.3)',borderWidth:2}]},
+    options:{cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}}});
+
+  // Trend chart (last 7 days)
+  const days=[],counts=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toLocaleDateString('en-IN',{month:'short',day:'numeric'});days.push(ds);counts.push(hist.filter(h=>{try{return new Date(h.time).toDateString()===d.toDateString();}catch{return false;}}).length);}
+  const tc=document.getElementById('trendChart');if(tc._chart)tc._chart.destroy();
+  tc._chart=new Chart(tc,{type:'line',data:{labels:days,datasets:[{label:'Analyses',data:counts,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.1)',tension:.4,fill:true}]},
+    options:{scales:{x:{grid:{color:'rgba(255,255,255,.05)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'}}},plugins:{legend:{display:false}}}});
+
+  // Locations chart
+  const locCounts={};
+  hist.forEach(h=>{const l=h.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
+  const sorted=Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const lc=document.getElementById('locChart');if(lc._chart)lc._chart.destroy();
+  lc._chart=new Chart(lc,{type:'bar',data:{labels:sorted.map(x=>x[0].slice(0,22)),
+    datasets:[{data:sorted.map(x=>x[1]),backgroundColor:'rgba(249,115,22,.8)',borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'}},y:{grid:{color:'rgba(255,255,255,.03)'},ticks:{font:{size:10}}}}}});
+
+  document.getElementById('adminDateTime').textContent=new Date().toLocaleString('en-IN');
+}
+
+function renderUsers(q){
+  const users=RS.getUsers().filter(u=>!q||u.name.toLowerCase().includes(q.toLowerCase())||u.email.toLowerCase().includes(q.toLowerCase()));
+  const tbody=document.getElementById('usersTable');
+  if(!users.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">┌</div><div>No users found</div></div></td></tr>`;return;}
+  tbody.innerHTML=users.map(u=>`<tr>
+    <td><span class="user-avatar">${u.avatar}</span>${u.name}</td>
+    <td>${u.email}</td>
+    <td><span class="role-tag ${u.role==='admin'?'role-admin':'role-user'}">${u.role}</span></td>
+    <td>${u.joined}</td>
+    <td>${u.analyses||0}</td>
+    <td><span class="status-tag ${u.blocked?'st-blocked':'st-active'}">${u.blocked?'Blocked':'Active'}</span></td>
+    <td>
+      ${u.role!=='admin'?`<button class="btn-sm btn-block" onclick="toggleBlock(${u.id})">${u.blocked?'Unblock':'Block'}</button>
+      <button class="btn-sm btn-delete" onclick="confirmDelete(${u.id})" style="margin-left:4px">Delete</button>`:'<span style="color:var(--muted);font-size:.72rem">Protected</span>'}
+    </td></tr>`).join('');
+}
+
+function toggleBlock(id){
+  RS.blockUser(id);
+  toast(RS.getUsers().find(u=>u.id===id)?.blocked?'User blocked.':'User unblocked.');
+  renderUsers('');
+}
+
+function confirmDelete(id){
+  const u=RS.getUsers().find(x=>x.id===id);
+  openConfirm('Delete User',`Delete "${u?.name}"? This cannot be undone.`,()=>{
+    RS.deleteUser(id);toast('User deleted.','error');renderUsers('');
+  });
+}
+
+function renderAnalyses(q){
+  let hist=RS.getAllHistory();
+  if(q) hist=hist.filter(h=>(h.userName+h.location+h.riskLevel).toLowerCase().includes(q.toLowerCase()));
+  const tbody=document.getElementById('analysesTable');
+  if(!hist.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">▦</div><div>No analyses found</div></div></td></tr>`;return;}
+  tbody.innerHTML=hist.slice(0,100).map(h=>`<tr>
+    <td><span class="user-avatar">${h.userName?h.userName[0]:'?'}</span>${h.userName||'N/A'}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${h.location||'—'}</td>
+    <td><span class="risk-badge rb-${h.riskLevel}">${h.riskLevel||'?'}</span></td>
+    <td style="color:${h.riskLevel==='EXTREME'?'#f87171':h.riskLevel==='HIGH'?'#fb923c':'#4ade80'};font-weight:700">${h.score||'?'}%</td>
+    <td>${h.weather||'—'}</td>
+    <td>${h.timeofday||'—'}</td>
+    <td style="color:var(--muted);font-size:.75rem">${h.time||'—'}</td></tr>`).join('');
+}
+
+function renderAnalytics(){
+  const hist=RS.getAllHistory();
+  // Weather dist
+  const wc={};hist.forEach(h=>{wc[h.weather]=(wc[h.weather]||0)+1;});
+  const w2=document.getElementById('weatherChart2');if(w2._chart)w2._chart.destroy();
+  w2._chart=new Chart(w2,{type:'pie',data:{labels:Object.keys(wc),datasets:[{data:Object.values(wc),backgroundColor:['rgba(59,130,246,.8)','rgba(249,115,22,.8)','rgba(239,68,68,.8)','rgba(168,85,247,.8)','rgba(234,179,8,.8)','rgba(34,197,94,.8)'],borderColor:'rgba(0,0,0,.3)',borderWidth:2}]},options:{plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:10}}}}}});
+  // Road dist
+  const rc={};hist.forEach(h=>{rc[h.roadtype]=(rc[h.roadtype]||0)+1;});
+  const r2=document.getElementById('roadChart2');if(r2._chart)r2._chart.destroy();
+  r2._chart=new Chart(r2,{type:'doughnut',data:{labels:Object.keys(rc),datasets:[{data:Object.values(rc),backgroundColor:['rgba(239,68,68,.8)','rgba(249,115,22,.8)','rgba(59,130,246,.8)','rgba(168,85,247,.8)','rgba(34,197,94,.8)'],borderColor:'rgba(0,0,0,.3)',borderWidth:2}]},options:{cutout:'55%',plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:10}}}}}});
+  // Hours
+  const hours=Array(24).fill(0);hist.forEach(h=>{try{const d=new Date(h.time);hours[d.getHours()]++;}catch{}});
+  const hc=document.getElementById('hourChart');if(hc._chart)hc._chart.destroy();
+  hc._chart=new Chart(hc,{type:'bar',data:{labels:Array.from({length:24},(_,i)=>`${i}:00`),datasets:[{data:hours,backgroundColor:'rgba(168,85,247,.7)',borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'}}}}});
+  // FOL rules
+  const fc=document.getElementById('folChart');if(fc._chart)fc._chart.destroy();
+  fc._chart=new Chart(fc,{type:'bar',data:{labels:['R1 Hwy+Rain+Night','R2 PoorRd+Speed','R3 AccZone+Traffic','R4 Urban+Night','R5 Fog+Speed','R6 Safe Cond.','R7 Festival+Hwy','R8 Construct.'],
+    datasets:[{label:'Times Fired',data:[hist.filter(h=>h.firedRules?.includes('R1')).length,hist.filter(h=>h.firedRules?.includes('R2')).length,hist.filter(h=>h.firedRules?.includes('R3')).length,hist.filter(h=>h.firedRules?.includes('R4')).length,hist.filter(h=>h.firedRules?.includes('R5')).length,hist.filter(h=>h.firedRules?.includes('R6')).length,hist.filter(h=>h.firedRules?.includes('R7')).length,hist.filter(h=>h.firedRules?.includes('R8')).length],
+    backgroundColor:v=>v.raw>5?'rgba(239,68,68,.8)':'rgba(249,115,22,.7)',borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'}}}}});
+}
+
+// Initial render
+renderDashboard();
+</script>
+</body>
+</html>
