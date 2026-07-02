@@ -8,7 +8,7 @@ The project aims to improve road safety awareness and help users make informed t
 
 ---
 
-## 🎯 Objectives
+## 🎯 Objectives  
 
 * Predict road accident risk using AI techniques.
 * Analyze road, weather, and traffic conditions.
