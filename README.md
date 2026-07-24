@@ -138,7 +138,6 @@ Final Risk Score:
 ```text
 Risk Score = 55% Bayesian + 45% FOL
 ```
-
 ---
 
 ## 🎓 Academic Relevance
@@ -155,7 +154,6 @@ This project demonstrates practical implementation of:
 ---
 
 ## 👩‍💻 Team Members
-
 ### Samiksha Kamble
 
 Developer & AI Research
