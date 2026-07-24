@@ -1,7 +1,6 @@
 # 🚦 RoadSafe India – AI-Powered Road Accident Risk Prediction System
 
 ## 📌 Overview
-
 RoadSafe India is an AI-powered road safety platform designed to predict road accident risk levels based on various environmental, traffic, and road-condition factors. The system combines Artificial Intelligence, Bayesian Probability, and First-Order Logic (FOL) reasoning to provide accurate risk assessments and safety recommendations for drivers.
 
 The project aims to improve road safety awareness and help users make informed travel decisions by identifying potential accident risks before a journey.
