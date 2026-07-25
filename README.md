@@ -98,7 +98,6 @@ RoadSafe-India/
 ├── README.md
 └── .gitignore
 ```
-
 ---
 
 ## 🚀 Installation
@@ -155,17 +154,14 @@ This project demonstrates practical implementation of:
 
 ## 👩‍💻 Team Members
 ### Samiksha Kamble
-
 Developer & AI Research
 
 ### Omraj Naiknavare 
-
 Frontend Development & Testing
 
 ---
 
 ## 📄 Future Enhancements
-
 * GPS-based route analysis
 * Accident hotspot prediction
 * Mobile application development
