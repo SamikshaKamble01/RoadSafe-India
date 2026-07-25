@@ -8,7 +8,6 @@ The project aims to improve road safety awareness and help users make informed t
 ---
 
 ## 🎯 Objectives       
-
 * Predict road accident risk using AI techniques.
 * Analyze road, weather, and traffic conditions.
 * Provide explainable AI (XAI) insights for risk predictions.
@@ -21,31 +20,26 @@ The project aims to improve road safety awareness and help users make informed t
 ## ✨ Features
 
 ### 🧠 Explainable AI (XAI)
-
 * Displays key factors contributing to accident risk.
 * Visual risk contribution analysis.
 * Bayesian likelihood ratio-based explanations.
 
 ### 🎤 Voice Input & Speech Output
-
 * Voice-enabled data entry.
 * Text-to-speech risk alerts.
 * Supports hands-free interaction.
 
 ### 🌦️ Live Weather Integration
-
 * Real-time weather information using Open-Meteo API.
 * Automatic synchronization with risk analysis.
 * Weather-based accident risk evaluation.
 
 ### 🤖 AI Road Safety Chatbot
-
 * Interactive AI assistant for road safety guidance.
 * Explains prediction results.
 * Provides personalized driving recommendations.
 
 ### 📊 Risk Analysis Engine
-
 * Bayesian Probability Model
 * First Order Logic (FOL) Rules
 * Ensemble Prediction System
@@ -61,24 +55,20 @@ The project aims to improve road safety awareness and help users make informed t
 ## 🛠️ Technologies Used
 
 ### Frontend
-
 * HTML5
 * CSS3
 * JavaScript
 
 ### Artificial Intelligence
-
 * Bayesian Inference
 * Explainable AI (XAI)
 * First Order Logic (FOL)
 
 ### APIs
-
 * Open-Meteo Weather API
 * OpenStreetMap Nominatim API
 
 ### Development Tools
-
 * Git
 * GitHub
 * VS Code
@@ -103,7 +93,6 @@ RoadSafe-India/
 ## 🚀 Installation
 
 ### Clone Repository
-
 ```bash
 git clone https://github.com/SamikshaKamble01/RoadSafe-India.git
 ```
