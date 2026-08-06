@@ -6,7 +6,6 @@ RoadSafe India is an AI-powered road safety platform designed to predict road ac
 The project aims to improve road safety awareness and help users make informed travel decisions by identifying potential accident risks before a journey.
 
 ---
-
 ## 🎯 Objectives       
 * Predict road accident risk using AI techniques.
 * Analyze road, weather, and traffic conditions.
@@ -140,7 +139,6 @@ This project demonstrates practical implementation of:
 * Decision Support Systems
 
 ---
-
 ## 👩‍💻 Team Members
 ### Samiksha Kamble
 Developer & AI Research
@@ -149,7 +147,6 @@ Developer & AI Research
 Frontend Development & Testing
 
 ---
-
 ## 📄 Future Enhancements
 * GPS-based route analysis
 * Accident hotspot prediction
@@ -158,5 +155,5 @@ Frontend Development & Testing
 * Machine Learning model deployment
 * Real-time traffic data integration
 
----
-## ⭐ If you found this project useful, consider giving it a Star on GitHub!
+
+
